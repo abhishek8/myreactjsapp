@@ -12,20 +12,34 @@ const AppUtils = {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
   },
 
-  getShortText(text) {
-    if (text.length > 100) return text.substring(0, 97) + "...";
-    else if (text.length === 0) return text + " " + "\xa0".repeat(150);
+  getShortText(text, length = 100) {
+    if (text.length > length) return text.substring(0, length - 3) + "...";
+    else if (text.length === 0) return text + " " + "\xa0".repeat(length);
     else {
-      text = text + " " + "\xa0".repeat(99 - text.length);
       return text;
     }
   },
 
+  capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  },
+
   checkImageExists(imgURL) {
     return axios
-      .head(imgURL)
+      .head(imgURL, {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+        },
+      })
       .then((res) => res.status !== 404)
       .catch((err) => false);
+  },
+
+  formatDateString(date) {
+    const formattedDate = new Date(date).toDateString();
+    const [, month, day, year] = formattedDate.split(" ");
+    const ddMmmYyyy = `${day}-${month}-${year}`;
+    return ddMmmYyyy;
   },
 };
 

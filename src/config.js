@@ -11,5 +11,11 @@ export const Server = {
 };
 
 export const AppDefault = {
-  imageURL: "https://martechseries.com/wp-content/uploads/2015/09/Persistent-Systems-and-ValidSoft-Deliver-New-Secure-Digital-Voice-Authentication-Capabilities-for-Banking-and-Credit-Unions.jpg"
-}
+  BASE_PATH: "http://localhost:3000",
+  imageURL:
+    "https://martechseries.com/wp-content/uploads/2015/09/Persistent-Systems-and-ValidSoft-Deliver-New-Secure-Digital-Voice-Authentication-Capabilities-for-Banking-and-Credit-Unions.jpg",
+};
+
+export const GoogleReCaptcha = {
+  SITE_KEY: "6LdYHbYZAAAAAAQd06VAVo_7lTs4O1TtSNvxA1-x",
+};

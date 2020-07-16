@@ -1,10 +1,10 @@
 import React from "react";
-import ListComponent from "./ListComponent";
+import ListComponent from "./shared/ListComponent";
 import AppUtils from "../utilities/AppUtils";
 import CourseService from "../services/courseService";
-import {AppDefault} from "../config";
-import { confirmAlert } from "react-confirm-alert";
-import "react-confirm-alert/src/react-confirm-alert.css";
+import CoursePreview from "./shared/CoursePreview";
+
+import Typography from "@material-ui/core/Typography";
 
 class BrowseCourses extends React.Component {
   constructor(props) {
@@ -12,21 +12,20 @@ class BrowseCourses extends React.Component {
 
     this.state = {
       courses: [],
-      isAdmin: false,
+      cart: [],
     };
-
-    this.getCourseThumbnail = this.getCourseThumbnail.bind(this);
-    this.confirmDeleteCourse = this.confirmDeleteCourse.bind(this);
   }
 
   async componentDidMount() {
-    let userData = JSON.parse(sessionStorage.getItem("user_info"));
+    let { params } = this.props.match;
     let serviceObj = new CourseService();
-    let courseList = await serviceObj.getAllCourses();
+    let courseList = await serviceObj.getAllCourses(`genre=${params.id}`);
+    console.log(courseList);
+    let cart = sessionStorage.getItem("app_cart");
     if (courseList && courseList.length > 0) {
       this.setState({
         courses: courseList,
-        isAdmin: userData ? userData.isAdmin : false,
+        cart: cart ? cart : [],
       });
     }
   }
@@ -44,94 +43,40 @@ class BrowseCourses extends React.Component {
     return courses;
   }
 
-  removeCourse(course) {
-    let serviceObj = new CourseService();
-    serviceObj
-      .deleteCourse(course._id)
-      .then((res) => {
-        let courseList = this.state.courses.filter((c) => c._id !== res._id);
-        this.setState({
-          courses: courseList,
-        });
-      })
-      .catch((err) => console.log(err));
-  }
-
-  confirmDeleteCourse(course) {
-    confirmAlert({
-      title: course.title,
-      message: "Are you sure you want to delete this course ?",
-      buttons: [
-        {
-          label: "Yes",
-          onClick: () => {
-            this.removeCourse(course);
-          },
-        },
-        {
-          label: "Cancel",
-          onClick: () => {},
-        },
-      ],
-      closeOnEscape: false,
-      closeOnClickOutside: false,
+  addToCart(courseId) {
+    let cart = sessionStorage.getItem("app_cart");
+    cart = cart ? cart : [];
+    cart.push(courseId);
+    sessionStorage.setItem("app_cart", cart);
+    this.setState({
+      cart: cart,
     });
-  }
-
-  getCourseThumbnail(imgURL) {
-    return imgURL && imgURL !== ""
-      ? imgURL
-      : AppDefault.imageURL;
   }
 
   render() {
     let filteredCourses = this.filterCourses(this.state.courses);
-    let heading = "No Courses Available";
-    if(filteredCourses && filteredCourses.length > 0) {
-      heading = "Courses Available";
+    let heading = "No courses available. Check back later.";
+    if (filteredCourses && filteredCourses.length > 0) {
+      heading = "Most popular";
     }
     const cardList = filteredCourses.map((course) => {
       return (
-        <div className="col-md-4" key={course._id}>
-          <div className="card course-card" height="75">
-            <img
-              src={this.getCourseThumbnail(course.thumbnail)}
-              className="card-img-top"
-              height="200"
-              alt="..."
-            />
-            <div className="card-body" height="75">
-              <h5 className="card-title">{course.title}</h5>
-              <p className="card-text" height="75">
-                {AppUtils.getShortText(course.description)}
-              </p>
-              <div className="">
-                <button
-                    onClick={() => this.props.history.push("/video/" + course._id)}
-                    className="btn btn-outline-secondary"
-                    style={{margin: "0.3rem"}}
-                  >
-                    Visit Course
-                  </button>
-                  {this.state.isAdmin && (
-                    <button
-                      onClick={() => this.confirmDeleteCourse(course)}
-                      className="btn btn-outline-danger"
-                      style={{margin: "0.3rem"}}
-                    >
-                      Remove
-                    </button>
-                  )}
-              </div>
-            </div>            
-          </div>
-        </div>
+        <CoursePreview
+          key={course._id}
+          course={course}
+          checkForCart={true}
+          {...this.props}
+        />
       );
     });
 
     return (
       <div>
-        <h2>{heading}</h2>
+        <br />
+        <Typography variant="h6" component="h4">
+          {heading}
+        </Typography>
+        <br />
         <ListComponent cardList={cardList}></ListComponent>
       </div>
     );

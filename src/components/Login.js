@@ -1,0 +1,238 @@
+import React, { useState, useEffect } from "react";
+import GoogleLogin from "react-google-login";
+import { Google } from "../config";
+import UserService from "../services/userService";
+
+import Avatar from "@material-ui/core/Avatar";
+import Button from "@material-ui/core/Button";
+//import CssBaseline from "@material-ui/core/CssBaseline";
+import TextField from "@material-ui/core/TextField";
+import FormControlLabel from "@material-ui/core/FormControlLabel";
+import Checkbox from "@material-ui/core/Checkbox";
+import Link from "@material-ui/core/Link";
+//import Paper from "@material-ui/core/Paper";
+import Grid from "@material-ui/core/Grid";
+import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
+import Typography from "@material-ui/core/Typography";
+import { Backdrop, CircularProgress } from "@material-ui/core";
+import IconButton from "@material-ui/core/IconButton";
+import { makeStyles } from "@material-ui/core/styles";
+import Icon from "@material-ui/core/Icon";
+
+import { loadCSS } from "fg-loadcss";
+
+import { confirmAlert } from "react-confirm-alert";
+import "react-confirm-alert/src/react-confirm-alert.css";
+
+const useStyles = makeStyles((theme) => ({
+  root: {
+    height: "100vh",
+  },
+  image: {
+    backgroundImage: "url(https://source.unsplash.com/random)",
+    backgroundRepeat: "no-repeat",
+    backgroundColor:
+      theme.palette.type === "light"
+        ? theme.palette.grey[50]
+        : theme.palette.grey[900],
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  },
+  paper: {
+    margin: theme.spacing(8, 4),
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  avatar: {
+    margin: theme.spacing(1),
+    backgroundColor: theme.palette.secondary.main,
+  },
+  form: {
+    width: "100%",
+    marginTop: theme.spacing(1),
+  },
+  submit: {
+    margin: theme.spacing(3, 0, 2),
+  },
+}));
+
+function Login(props) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const userService = new UserService();
+  const { params } = props.match;
+  const userRole = params.role ? params.role : "user";
+
+  const [open, setOpen] = useState(false);
+  const classes = useStyles();
+
+  useEffect(() => {
+    const node = loadCSS(
+      "https://use.fontawesome.com/releases/v5.12.0/css/all.css",
+      document.querySelector("#font-awesome-css")
+    );
+
+    return () => {
+      node.parentNode.removeChild(node);
+    };
+  }, []);
+
+  const navigateAfterLogin = () => {
+    let search = props.location.search;
+    let returnURL = new URLSearchParams(search).get("return");
+    props.history.push(returnURL ? returnURL : "/");
+  };
+
+  const authenticateUser = (email, password, authToken = "") => {
+    switch (userRole) {
+      case "trainer":
+        return userService.signInAsTrainer({ email, password, authToken });
+      case "reviewer":
+        return userService.signInAsReviewer({ email, password, authToken });
+      case "admin":
+        return userService.signInAsAdmin({ email, password, authToken });
+      default:
+        return userService.signInAsUser({ email, password, authToken });
+    }
+  };
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    setOpen(true);
+    authenticateUser(email, password).then((result) => {
+      if (result && result.success === true) {
+        sessionStorage.setItem("auth_cookie", result.data.token.toString());
+        sessionStorage.setItem("user_info", JSON.stringify(result.data));
+        navigateAfterLogin();
+      } else {
+        handleAuthFailure(result);
+      }
+    });
+  };
+
+  const handleGoogleLogin = async (response) => {
+    let res = response.profileObj;
+    setOpen(true);
+    if (res) {
+      const result = await authenticateUser(
+        res.email,
+        "",
+        response.wc.id_token
+      );
+
+      if (result && result.success === true) {
+        sessionStorage.setItem("auth_cookie", result.data.token.toString());
+        sessionStorage.setItem("user_info", JSON.stringify(result.data));
+        navigateAfterLogin();
+      } else {
+        handleAuthFailure(result);
+      }
+    }
+  };
+
+  const handleAuthFailure = (err) => {
+    setOpen(false);
+    confirmAlert({
+      title: "Authentication Failed",
+      message: err && err.error ? err.error : "",
+      buttons: [
+        {
+          label: "Ok",
+          onClick: () => {},
+        },
+      ],
+      closeOnEscape: true,
+      closeOnClickOutside: true,
+    });
+  };
+
+  return (
+    <>
+      <Backdrop open={open} style={{ zIndex: 35001 }}>
+        <CircularProgress color="primary" />
+      </Backdrop>
+      <Avatar className={classes.avatar}>
+        <LockOutlinedIcon />
+      </Avatar>
+      <Typography component="h1" variant="h5">
+        Sign in
+      </Typography>
+      <form className={classes.form} onSubmit={handleSubmit} noValidate>
+        <TextField
+          variant="outlined"
+          margin="normal"
+          required
+          fullWidth
+          id="email"
+          label="Email Address"
+          name="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          autoComplete="email"
+          autoFocus
+        />
+        <TextField
+          variant="outlined"
+          margin="normal"
+          required
+          fullWidth
+          name="password"
+          label="Password"
+          type="password"
+          id="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
+        />
+        <FormControlLabel
+          control={<Checkbox value="remember" color="primary" />}
+          label="Remember me"
+        />
+        <Button
+          type="submit"
+          fullWidth
+          variant="contained"
+          color="primary"
+          className={classes.submit}
+        >
+          Sign In
+        </Button>
+        <Grid container>
+          <Grid item xs>
+            <Link href="/forgot-password" variant="body2">
+              Forgot password?
+            </Link>
+          </Grid>
+          <Grid item>
+            <Link href="/register" variant="body2">
+              {"Don't have an account? Sign Up"}
+            </Link>
+          </Grid>
+        </Grid>
+      </form>
+      <br />
+      <Typography variant="body2" component="h5" gutterBottom>
+        Or continue with
+      </Typography>
+      <Grid container spacing={8} justify="center">
+        <Grid item>
+          <GoogleLogin
+            clientId={Google.CLIENT_ID}
+            buttonText=""
+            onSuccess={handleGoogleLogin}
+            onFailure={handleAuthFailure}
+            render={(renderProps) => (
+              <IconButton color="primary" onClick={renderProps.onClick}>
+                <Icon className="fab fa-google" color="primary" />
+              </IconButton>
+            )}
+          ></GoogleLogin>
+        </Grid>
+      </Grid>
+    </>
+  );
+}
+
+export default Login;
