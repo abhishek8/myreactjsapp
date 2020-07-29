@@ -102,8 +102,7 @@ export default class UserService {
         },
       })
       .then((res) => {
-        console.log(res);
-        return res.data;
+        if (res.data && res.data.success) return res.data.data;
       })
       .catch((err) => console.log(err));
   };

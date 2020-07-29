@@ -1,59 +1,54 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import AppUtils from "../utilities/AppUtils";
+import { AppDefault } from "../config";
+import { Grid, Typography } from "@material-ui/core";
+import EmailRoundedIcon from "@material-ui/icons/EmailRounded";
+import VerifiedUserIcon from "@material-ui/icons/VerifiedUser";
 
-class Profile extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      userName: "Something went wrong!",
-      profilePicture:
-        "https://wholesaleduniya.com/wholeadmin/files/DesignImages/22115/63327_1.jpg",
-      email: "",
-      role: "Unknown",
-    };
-  }
+function Profile(props) {
+  const [profileInfo, setProfileInfo] = useState({
+    username: "Something went wrong!",
+    profileImg: AppDefault.noImage,
+    role: "unknown",
+    email: "",
+  });
 
-  async componentDidMount() {
+  useEffect(() => {
     let userData = JSON.parse(sessionStorage.getItem("user_info"));
 
     if (userData) {
       // let picExists = await AppUtils.checkImageExists(userData.imageUrl);
-      let picUrl = userData.profileImage
-        ? userData.profileImage
-        : this.state.profilePicture;
-      this.setState({
-        userName: userData.name,
-        profilePicture: picUrl,
+      let picUrl = userData.profileImage;
+      setProfileInfo({
+        username: userData.name,
+        profileImg: picUrl ? picUrl : AppDefault.noImage,
         email: userData.email,
         role: AppUtils.capitalize(userData.role),
       });
     }
-  }
+  }, []);
 
-  render() {
-    return (
-      <div className="">
-        <h1>&nbsp;</h1>
-        <div className="row">
-          <div className="col-2">
-            <img
-              src={this.state.profilePicture}
-              alt="profile"
-              height="150"
-              width="150"
-            />
-          </div>
-          <div className="">
-            <h1>
-              <b>{this.state.email}</b>
-            </h1>
-            <h4>Name - {this.state.userName}</h4>
-            <h4>Role - {this.state.role}</h4>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  return (
+    <div className="">
+      <h1>&nbsp;</h1>
+      <Grid container>
+        <Grid item>
+          <img src={profileInfo.profileImg} alt="" height="150" width="150" />
+        </Grid>
+        <Grid item style={{ margin: "16px" }}>
+          <Typography variant="h3" component="h3">
+            {profileInfo.username}
+          </Typography>
+          <Typography variant="h5" component="h5">
+            <EmailRoundedIcon /> {profileInfo.email}
+          </Typography>
+          <Typography variant="h6" component="h6">
+            <VerifiedUserIcon /> {profileInfo.role}
+          </Typography>
+        </Grid>
+      </Grid>
+    </div>
+  );
 }
 
 export default Profile;

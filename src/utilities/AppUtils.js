@@ -41,6 +41,31 @@ const AppUtils = {
     const ddMmmYyyy = `${day}-${month}-${year}`;
     return ddMmmYyyy;
   },
+
+  getPublishedDateString(date) {
+    const publishedDate = new Date(date);
+    const currentDate = new Date();
+    const diffTime = Math.abs(currentDate - publishedDate);
+    let dateString = "";
+
+    if (diffTime < 3600000)
+      dateString = Math.floor(diffTime / 60000).toString() + " minutes ago";
+    else if (diffTime < 86400000)
+      dateString = Math.floor(diffTime / 3600000).toString() + " hours ago";
+    else if (diffTime < 604800000)
+      dateString = Math.floor(diffTime / 86400000).toString() + " days ago";
+    else if (diffTime < 2592000000)
+      dateString = Math.floor(diffTime / 604800000).toString() + " weeks ago";
+    else if (diffTime < 31104000000)
+      dateString = Math.floor(diffTime / 2592000000).toString() + " months ago";
+    else
+      dateString = Math.floor(diffTime / 31104000000).toString() + " years ago";
+
+    dateString =
+      dateString.charAt(0) === "1" ? dateString.replace("s", "") : dateString;
+
+    return dateString;
+  },
 };
 
 export default AppUtils;

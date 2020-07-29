@@ -85,10 +85,17 @@ const getCourseDetails = async (req, res) => {
       });
     }
 
-    if (!course.verification.status && course.authorId != req.user._id) {
+    if (!course.verification.status && req.user.role === "user") {
       return res.status(400).json({
         success: false,
         error: `Course has not been verified yet`,
+      });
+    }
+
+    if (req.user.role === "trainer" && course.authorId != req.user._id) {
+      return res.status(401).json({
+        success: false,
+        error: `This isn't your course. To view this course log in as a user`,
       });
     }
 
@@ -164,8 +171,6 @@ const createCourse = (req, res) => {
   }
 
   const course = new Course(body);
-  if (!course.courseLink)
-    course.courseLink = `${AppDefaults.BASE_PATH}/uploads/${course._id}.mp4`;
   course.authorId = req.user._id;
 
   if (!course) {
@@ -348,7 +353,9 @@ const deleteCourse = async (req, res) => {
       }
 
       if (course.courseLink.startsWith(AppDefaults.BASE_PATH))
-        await unlinkAsync("../server/uploads/" + req.params.id + ".mp4");
+        await unlinkAsync(
+          "../server/" + course.courseLink.replace(AppDefaults.BASE_PATH, "")
+        );
 
       return res.status(200).json({ success: true, data: course });
     }

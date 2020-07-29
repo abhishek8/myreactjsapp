@@ -18,7 +18,7 @@ const Course = new Schema(
         "design",
         "development",
         "marketing",
-        "soft_skill",
+        "communication",
         "finance",
         "others",
       ],

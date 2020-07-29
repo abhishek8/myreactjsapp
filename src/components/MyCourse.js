@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from "react";
-import CoursePreview from "./shared/CoursePreview";
+import MyCoursePreview from "./shared/MyCoursePreview";
+import Loading from "./shared/Loading";
 import CourseService from "../services/courseService";
 
-import { Grid, Button, Typography } from "@material-ui/core";
+import { Grid, Button, Typography, Snackbar } from "@material-ui/core";
 import CreateSharpIcon from "@material-ui/icons/CreateSharp";
+import Alert from "@material-ui/lab/Alert";
 
 function MyCourse(props) {
   const [courses, setCourses] = useState([]);
+
+  const [loading, setLoading] = useState(false);
+  const [deleteSuccess, setdeleteSuccess] = useState(false);
+  const [deleteFail, setdeleteFail] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -19,32 +25,38 @@ function MyCourse(props) {
     fetchData();
   }, []);
 
-  const removeCourse = (course) => {
+  const removeCourse = (courseId) => {
     let courseService = new CourseService();
+    setLoading(true);
     courseService
-      .deleteCourse(course._id)
+      .deleteCourse(courseId)
       .then((res) => {
+        setLoading(false);
         if (res) {
           let courseList = courses.filter((c) => c._id !== res._id);
           setCourses(courseList);
-        }
+          setdeleteSuccess(true);
+        } else setdeleteFail(true);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => {
+        console.log(err);
+        setLoading(false);
+        setdeleteFail(true);
+      });
   };
 
   return (
     <div>
       <br />
-      <div>
-        <Button
-          variant="contained"
-          color="primary"
-          className="mb-3"
-          onClick={() => props.history.push("/course/create")}
-        >
-          <CreateSharpIcon /> Create Course
-        </Button>
-      </div>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={() => props.history.push("/course/new")}
+      >
+        <CreateSharpIcon /> Create Course
+      </Button>
+      <br />
+      <br />
       <Typography variant="h6" component="h4">
         {courses.length > 0
           ? "My Courses"
@@ -54,19 +66,34 @@ function MyCourse(props) {
 
       <Grid container spacing={4}>
         {courses.map((course) => (
-          <CoursePreview
+          <MyCoursePreview
             key={course._id}
             course={course}
-            isAuthor={true}
             handleEdit={() =>
               props.history.push(`/course/create/${course._id}`)
             }
-            handleRemove={() => removeCourse(course._id)}
+            handleRemove={removeCourse}
             handleClick={() => props.history.push(`/video/${course._id}`)}
-            {...props}
           />
         ))}
       </Grid>
+      {loading && <Loading />}
+      <Snackbar
+        open={deleteSuccess}
+        autoHideDuration={6000}
+        onClose={() => setdeleteSuccess(false)}
+      >
+        <Alert severity="success">Course successfully deleted.</Alert>
+      </Snackbar>
+      <Snackbar
+        open={deleteFail}
+        autoHideDuration={6000}
+        onClose={() => setdeleteFail(false)}
+      >
+        <Alert severity="error">
+          Failed to delete this course. Please try again!
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

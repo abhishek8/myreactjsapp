@@ -22,7 +22,7 @@ import { loadCSS } from "fg-loadcss";
 
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
-import { Backdrop, CircularProgress, Toolbar } from "@material-ui/core";
+import { Backdrop, CircularProgress } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -275,7 +275,9 @@ function Register(props) {
             ></GoogleLogin>
           </Grid>
         </Grid>
-        <Toolbar />
+        {/* <Toolbar /> */}
+        <br />
+        <br />
       </div>
     </Container>
   );

@@ -1,11 +1,22 @@
 import React, { useEffect, useState } from "react";
 import CourseService from "../services/courseService";
-import CoursePreview from "./shared/CoursePreview";
+import ReviewPreview from "./shared/ReviewPreview";
 
-import { Typography, Grid } from "@material-ui/core";
+import {
+  Typography,
+  Grid,
+  Backdrop,
+  CircularProgress,
+  Snackbar,
+} from "@material-ui/core";
+import Alert from "@material-ui/lab/Alert";
 
 function ReviewCourses(props) {
   const [courses, setCourses] = useState([]);
+
+  const [loading, setLoading] = useState(false);
+  const [reviewSuccess, setreviewSuccess] = useState(false);
+  const [reviewFail, setreviewFail] = useState(false);
 
   useEffect(() => {
     let service = new CourseService();
@@ -17,37 +28,57 @@ function ReviewCourses(props) {
 
   const verifyCourse = async (courseId, status) => {
     let service = new CourseService();
+    setLoading(true);
     let res = await service.verifyCourse(courseId, status);
+    setLoading(false);
     if (res) {
       if (status) {
         setCourses(courses.filter((course) => course._id !== courseId));
       }
-      alert("Successful");
-    } else alert("Unsuccessful");
+      setreviewSuccess(true);
+    } else setreviewFail(true);
   };
 
   return (
     <div>
       <br />
+      <Backdrop open={loading}>
+        <CircularProgress />
+      </Backdrop>
       <Typography variant="h6" component="h4">
         {courses.length > 0
           ? "Pending Courses"
           : "No courses are pending to be reviewd. Come back later."}
       </Typography>
       <br />
-      <Grid container spacing={4}>
+      <Grid container spacing={3}>
         {courses.map((course) => (
-          <CoursePreview
+          <ReviewPreview
             key={course._id}
             course={course}
-            isReviewer={true}
-            handleClick={() => props.history.push(`/video/${course._id}`)}
-            handleAccept={() => verifyCourse(course._id, true)}
-            handleReject={() => verifyCourse(course._id, false)}
+            verifyCourse={verifyCourse}
             {...props}
           />
         ))}
       </Grid>
+      <Snackbar
+        open={reviewSuccess}
+        autoHideDuration={6000}
+        onClose={() => setreviewSuccess(false)}
+      >
+        <Alert severity="success">
+          Your review has been successfully submitted.
+        </Alert>
+      </Snackbar>
+      <Snackbar
+        open={reviewFail}
+        autoHideDuration={6000}
+        onClose={() => setreviewFail(false)}
+      >
+        <Alert severity="error">
+          Failed to submit your review. Please try again!
+        </Alert>
+      </Snackbar>
     </div>
   );
 }

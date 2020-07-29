@@ -79,6 +79,19 @@ function Login(props) {
     };
   }, []);
 
+  const getHeader = () => {
+    switch (params.role) {
+      case "trainer":
+        return " as Trainer";
+      case "reviewer":
+        return " as Reviewer";
+      case "admin":
+        return " as Admin";
+      default:
+        return "";
+    }
+  };
+
   const navigateAfterLogin = () => {
     let search = props.location.search;
     let returnURL = new URLSearchParams(search).get("return");
@@ -157,7 +170,7 @@ function Login(props) {
         <LockOutlinedIcon />
       </Avatar>
       <Typography component="h1" variant="h5">
-        Sign in
+        Sign in {getHeader()}
       </Typography>
       <form className={classes.form} onSubmit={handleSubmit} noValidate>
         <TextField

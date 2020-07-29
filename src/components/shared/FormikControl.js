@@ -16,7 +16,9 @@ import {
   TextField,
   FormControlLabel,
   Checkbox,
+  Fab,
 } from "@material-ui/core";
+import AddCircleSharpIcon from "@material-ui/icons/AddCircleSharp";
 
 const renderErrorMessage = (name) => {
   return (
@@ -40,13 +42,6 @@ function FormikControl(props) {
             fullWidth={true}
             {...rest}
           />
-          {/* <label htmlFor={name}>{label}</label>
-          <Field
-            name={name}
-            {...rest}
-            placeholder={label}
-            className="form-control"
-          /> */}
         </Box>
       );
     case "textarea":
@@ -69,15 +64,13 @@ function FormikControl(props) {
     case "select":
       return (
         <Box margin={1}>
-          <FormControl variant="outlined" style={{ minWidth: 600 }}>
+          <FormControl
+            variant="outlined"
+            margin="dense"
+            style={{ width: "100%" }}
+          >
             <InputLabel htmlFor={name}>{label}</InputLabel>
-            <Select
-              style={{ minWidth: "320" }}
-              name={name}
-              label={label}
-              fullWidth={true}
-              {...rest}
-            >
+            <Select name={name} label={label} fullWidth={true} {...rest}>
               <MenuItem value="">
                 <em>Select</em>
               </MenuItem>
@@ -88,24 +81,36 @@ function FormikControl(props) {
               ))}
             </Select>
             {renderErrorMessage(name)}
-            {/* <label htmlFor={name}>{label}</label>
-          <select name={name} {...rest} className="form-control">
-            <option value=""> Select </option>
-            {options.map((val) => (
-              <option key={val.key} value={val.key}>
-                {val.value}
-              </option>
-            ))}
-          </select>
-          {renderErrorMessage(name)} */}
           </FormControl>
         </Box>
+      );
+    case "file":
+      return (
+        <label htmlFor={name}>
+          <input
+            style={{ display: "none" }}
+            id={name}
+            name={name}
+            type="file"
+            {...rest}
+          />
+
+          <Fab
+            color="primary"
+            size="small"
+            component="span"
+            aria-label="add"
+            variant="extended"
+            style={{ padding: "10px" }}
+          >
+            <AddCircleSharpIcon />
+            &nbsp;Choose File
+          </Fab>
+        </label>
       );
     case "recaptcha":
       return (
         <Box margin={1}>
-          {/* <SiteReCaptcha name={name} {...rest} /> */}
-          {/* <GoogleReCaptcha name={name} {...rest} /> */}
           <ReCaptcha
             name={name}
             sitekey={ReCaptchaSettings.SITE_KEY}

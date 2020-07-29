@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import AppUtils from "../../utilities/AppUtils";
 
 import Grid from "@material-ui/core/Grid";
@@ -10,36 +10,33 @@ import Rating from "@material-ui/lab/Rating";
 import Chip from "@material-ui/core/Chip";
 import ScoreIcon from "@material-ui/icons/Score";
 import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
-import EditIcon from "@material-ui/icons/Edit";
-import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
-import CancelRoundedIcon from "@material-ui/icons/CancelRounded";
-import CheckIcon from "@material-ui/icons/CheckCircle";
-import { makeStyles, Button, IconButton } from "@material-ui/core";
+import { makeStyles, Button } from "@material-ui/core";
+import { CartContext } from "../../context";
 
 const useStyles = makeStyles((theme) => ({
   cardGrid: {
     paddingTop: theme.spacing(4),
-    paddingBottom: theme.spacing(4),
+    paddingBottom: theme.spacing(2),
   },
   card: {
     height: "100%",
     display: "flex",
     flexDirection: "column",
-    "&:hover": {
-      cursor: "pointer",
-    },
   },
   cardMedia: {
-    paddingTop: "50%",
+    paddingTop: "60%",
     "&:hover": {
+      cursor: "pointer",
       backgroundColor: "#000",
       opacity: 0.2,
     },
   },
   cardContent: {
     flexGrow: 1,
-    paddingTop: "0",
-    paddingBottom: "0",
+    paddingTop: theme.spacing(1),
+    "&:last-child": {
+      paddingBottom: theme.spacing(1),
+    },
   },
 }));
 
@@ -49,7 +46,9 @@ function CoursePreview(props) {
   const isLoggedIn = cookieInfo && cookieInfo.length > 0 ? true : false;
   const role = userInfo ? userInfo.role : "";
 
-  const [cart, setCart] = useState(sessionStorage.getItem("app_cart"));
+  const cartContext = useContext(CartContext);
+
+  const [cart, setCart] = useState([]);
 
   const course = props.course;
   const title = AppUtils.getShortText(props.course.title, 35);
@@ -68,46 +67,17 @@ function CoursePreview(props) {
     return isLoggedIn && checkRole("user") && props.checkForCart;
   };
 
-  const toggleCart = () => {
-    return cart ? cart.includes(course._id) : false;
-  };
+  // const toggleCart = () => {
+  //   return cart ? cart.includes(course._id) : false;
+  // };
 
   const addToCart = (e) => {
     e.preventDefault();
+    cartContext.cartDispatch({ type: "add", courseId: course._id });
     var cartItems = cart ? cart : [];
     cartItems.push(course._id);
     sessionStorage.setItem("app_cart", JSON.stringify(cartItems));
-    setCart(cartItems);
-  };
-
-  const handleClick = (e) => {
-    if (props.handleClick) {
-      props.handleClick();
-    }
-  };
-
-  const handleEdit = (e) => {
-    if (props.handleEdit) {
-      props.handleEdit();
-    }
-  };
-
-  const handleRemove = (e) => {
-    if (props.handleRemove) {
-      props.handleRemove();
-    }
-  };
-
-  const handleAccept = (e) => {
-    if (props.handleAccept) {
-      props.handleAccept();
-    }
-  };
-
-  const handleReject = (e) => {
-    if (props.handleReject) {
-      props.handleReject();
-    }
+    setCart((prev) => [...prev, course._id]);
   };
 
   return (
@@ -117,13 +87,13 @@ function CoursePreview(props) {
           className={classes.cardMedia}
           image={course.thumbnail}
           title={course.title}
-          onClick={handleClick}
+          onClick={props.handleClick}
         />
         <CardContent className={classes.cardContent}>
-          <Typography gutterBottom variant="h6" component="h6">
+          <Typography variant="h6" component="h6">
             {title}
           </Typography>
-          <Typography variant="caption" component="h5">
+          <Typography variant="caption" component="p">
             {author}
           </Typography>
           <Typography variant="caption" component="h5">
@@ -136,17 +106,19 @@ function CoursePreview(props) {
               readOnly
             />{" "}
             ({course.ratings.total_count}){" "}
-            <Chip
-              label={props.course.credits.score.toFixed(1) + " credits"}
-              color="default"
-              size="small"
-              icon={<ScoreIcon />}
-            />
           </Typography>
-          <Typography variant="h6" component="h4">
-            {credit}
-          </Typography>
-          {showCart() && !toggleCart() && (
+          <Chip
+            label={props.course.credits.score.toFixed(1) + " credit gain"}
+            color="default"
+            size="small"
+            icon={<ScoreIcon />}
+          />
+          {!props.purchased && (
+            <Typography color="secondary" variant="h6" component="h6">
+              {credit}
+            </Typography>
+          )}
+          {showCart() && !(cart && cart.includes(course._id)) && (
             <Button
               variant="contained"
               color="primary"
@@ -156,7 +128,7 @@ function CoursePreview(props) {
               Add to <ShoppingCartIcon />
             </Button>
           )}
-          {showCart() && toggleCart() && (
+          {showCart() && cart && cart.includes(course._id) && (
             <Button
               variant="contained"
               color="secondary"
@@ -165,46 +137,6 @@ function CoursePreview(props) {
             >
               Go to <ShoppingCartIcon />
             </Button>
-          )}
-          {props.isAuthor && checkRole("trainer") && (
-            <>
-              <IconButton
-                variant="contained"
-                color="primary"
-                size="medium"
-                onClick={handleEdit}
-              >
-                <EditIcon />
-              </IconButton>
-              <IconButton
-                variant="contained"
-                color="secondary"
-                size="medium"
-                onClick={handleRemove}
-              >
-                <DeleteForeverIcon />
-              </IconButton>
-            </>
-          )}
-          {props.isReviewer && checkRole("reviewer") && (
-            <>
-              <IconButton
-                variant="contained"
-                color="primary"
-                size="medium"
-                onClick={handleAccept}
-              >
-                <CheckIcon />
-              </IconButton>
-              <IconButton
-                variant="contained"
-                color="secondary"
-                size="medium"
-                onClick={handleReject}
-              >
-                <CancelRoundedIcon />
-              </IconButton>
-            </>
           )}
         </CardContent>
       </Card>

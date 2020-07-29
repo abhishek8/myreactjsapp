@@ -1,39 +1,18 @@
-// import React, { Component } from "react";
+import React from "react";
 
-// const AppContext = React.createContext();
+const initialCartValue = [];
 
-// class AppProvider extends Component {
-//   state = {
-//     returnUrl: "",
-//     isLoggedIn: false,
-//     isAdmin: false,
-//     userDetails: {
-//       name: "",
-//       email: "",
-//       imageUrl: "",
-//       access_token: "",
-//     },
-//   };
+export const CartReducer = (state, action) => {
+  switch (action.type) {
+    case "add":
+      return [...state, action.courseId];
+    case "remove":
+      return state.splice(state.indexOf(action.courseId), 1);
+    case "reset":
+      return initialCartValue;
+    default:
+      return state;
+  }
+};
 
-//   render() {
-//     return (
-//       <AppContext.Provider value={{ ...this.state }}>
-//         {this.props.children}
-//       </AppContext.Provider>
-//     );
-//   }
-// }
-
-// const AppConsumer = AppContext.Consumer;
-
-// export function withAppConsumer(Component) {
-//   return function ConsumerWrapper(props) {
-//     return (
-//       <AppConsumer>
-//         {(value) => <Component {...props} context={value} />}
-//       </AppConsumer>
-//     );
-//   };
-// }
-
-// export { AppProvider, AppConsumer, AppContext };
+export const CartContext = React.createContext();

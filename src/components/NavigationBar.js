@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { useHistory } from "react-router-dom";
 import UserService from "../services/userService";
 
@@ -10,12 +10,18 @@ import AccountCircle from "@material-ui/icons/AccountCircle";
 import CartIcon from "@material-ui/icons/AddShoppingCartSharp";
 import Menu from "@material-ui/core/Menu";
 import MenuItem from "@material-ui/core/MenuItem";
-import { makeStyles } from "@material-ui/core";
+import { makeStyles, Badge } from "@material-ui/core";
+import { CartContext } from "../context";
 //import MenuIcon from "@material-ui/icons/Menu";
 
 const useStyles = makeStyles((theme) => ({
+  brandImage: {
+    cursor: "pointer",
+    maxHeight: theme.spacing(4),
+  },
   navGrid: {
     "& > button": {
+      marginRight: theme.spacing(1),
       "&:focus": {
         borderRadius: "0",
         boxShadow: "0",
@@ -29,8 +35,9 @@ function NavigationBar(props) {
   const [isLoggedIn, setLogin] = useState(false);
   const [role, setRole] = useState("");
   const [anchorEl, setAnchorEl] = useState("");
-  const history = useHistory();
 
+  const cartContext = useContext(CartContext);
+  const history = useHistory();
   const classes = useStyles();
 
   useEffect(() => {
@@ -45,7 +52,7 @@ function NavigationBar(props) {
   const logout = () => {
     const userService = new UserService();
     userService.logoutUser();
-    history.push("/");
+    history.push("/login");
   };
 
   const checkRole = (name) => {
@@ -56,23 +63,14 @@ function NavigationBar(props) {
     <div>
       <AppBar position="fixed">
         <Toolbar>
+          <img
+            src="/logo.png"
+            onClick={() => history.push("/")}
+            alt="Persistent Systems"
+            className={classes.brandImage}
+          />
           <Grid align="right" justify="space-between" container>
-            <Grid className={classes.navGrid} item>
-              {/* <Button
-                color="secondary"
-                onClick={() => history.push("/")}
-                disableRipple
-                disableElevation
-              >
-                Persistent System
-              </Button> */}
-              <img
-                src="logo.png"
-                onClick={() => history.push("/")}
-                alt="Persistent Systems"
-                style={{ cursor: "pointer" }}
-              />
-            </Grid>
+            <Grid className={classes.navGrid} item></Grid>
 
             <Grid className={classes.navGrid} item>
               {!isLoggedIn && (
@@ -136,7 +134,12 @@ function NavigationBar(props) {
                         disableRipple
                         disableElevation
                       >
-                        <CartIcon />
+                        <Badge
+                          color="secondary"
+                          badgeContent={cartContext.cartState.length}
+                        >
+                          <CartIcon />
+                        </Badge>
                       </Button>
                     </>
                   )}

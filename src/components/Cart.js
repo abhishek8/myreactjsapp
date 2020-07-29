@@ -8,16 +8,16 @@ import {
   makeStyles,
   Button,
   Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
   ListItemText,
-  ListItemSecondaryAction,
   IconButton,
+  Table,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
 } from "@material-ui/core";
 import DeleteIcon from "@material-ui/icons/Delete";
-import FolderIcon from "@material-ui/icons/Folder";
-import FolderSpecialSharpIcon from "@material-ui/icons/FolderSpecialSharp";
 import Container from "react-bootstrap/Container";
 
 const useStyles = makeStyles((theme) => ({
@@ -42,25 +42,26 @@ function Cart(props) {
   const [cartItems, setCartItems] = useState([]);
   const [totalCredits, setTotalCredits] = useState(0);
   const courseService = new CourseService();
-  const courseList = sessionStorage.getItem("app_cart")
-    ? JSON.parse(sessionStorage.getItem("app_cart"))
-    : [];
 
   const classes = useStyles();
 
   useEffect(() => {
+    const courseList = sessionStorage.getItem("app_cart")
+      ? JSON.parse(sessionStorage.getItem("app_cart"))
+      : [];
     if (courseList && courseList.length > 0) {
       const fetchCartItems = async (courseId) => {
-        const res = await courseService.getCourseById(courseId);
+        const service = new CourseService();
+        const res = await service.getCourseById(courseId);
         if (res) {
           const data = {
             id: res._id,
             name: res.title,
             credit: res.credits.criteria,
             author: res.author.name,
+            thumbnail: res.thumbnail,
           };
           setCartItems((prevItems) => [...prevItems, data]);
-          setTotalCredits((prevTotal) => prevTotal + data.credit);
         }
       };
 
@@ -69,6 +70,27 @@ function Cart(props) {
       });
     }
   }, []);
+
+  useEffect(() => {
+    if (cartItems.length > 0) {
+      let total = 0;
+      cartItems.forEach((item) => {
+        total += item.credit;
+      });
+      console.log(total);
+      setTotalCredits(total);
+    }
+  }, [cartItems]);
+
+  const removeFromCart = async (courseId) => {
+    let items = JSON.parse(sessionStorage.getItem("app_cart"));
+    items.splice(items.indexOf(courseId), 1);
+    sessionStorage.setItem("app_cart", JSON.stringify(items));
+
+    let cart = cartItems;
+    cart = cart.filter((item) => item.id !== courseId);
+    setCartItems(cart);
+  };
 
   const purchaseCourse = async (event) => {
     event.preventDefault();
@@ -97,7 +119,10 @@ function Cart(props) {
       </Typography>
       <br />
       <Typography variant="subtitle1" component="h6">
-        {cartItems.length} Courses in Cart
+        {cartItems.length < 2
+          ? cartItems.length + " Course "
+          : cartItems.length + " Courses "}{" "}
+        in Cart
       </Typography>
       {cartItems.length === 0 && (
         <div>
@@ -121,7 +146,69 @@ function Cart(props) {
       )}
       {cartItems.length > 0 && (
         <>
-          <List dense={false}>
+          <TableContainer component={Paper}>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell />
+                  <TableCell>Details</TableCell>
+                  <TableCell align="center">Credits</TableCell>
+                  <TableCell />
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {cartItems.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell>
+                      <Avatar src={item.thumbnail} size="large" />
+                    </TableCell>
+                    <TableCell>
+                      <ListItemText
+                        primary={item.name}
+                        secondary={item.author ? item.author : null}
+                      />
+                    </TableCell>
+                    <TableCell align="center">
+                      {Number(item.credit).toFixed(1)}
+                    </TableCell>
+                    <TableCell align="center">
+                      <IconButton
+                        edge="end"
+                        aria-label="delete"
+                        onClick={() => removeFromCart(item.id)}
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                <TableRow>
+                  <TableCell colSpan={2} align="right">
+                    Total Credits
+                  </TableCell>
+                  <TableCell align="center">
+                    {Number(totalCredits).toFixed(1)}
+                  </TableCell>
+                  <TableCell />
+                </TableRow>
+                <TableRow>
+                  <TableCell colSpan={3} />
+                  <TableCell align="center">
+                    <Button
+                      onClick={purchaseCourse}
+                      variant="contained"
+                      color="primary"
+                      size="medium"
+                    >
+                      Buy
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* <List dense={false}>
             <ListItem>
               <ListItemAvatar>
                 <Avatar>
@@ -132,11 +219,9 @@ function Cart(props) {
               <ListItemText primary="Credits" />
             </ListItem>
             {cartItems.map((item) => (
-              <ListItem key={item.id}>
+              <ListItem key={item.id} justify="center">
                 <ListItemAvatar>
-                  <Avatar>
-                    <FolderIcon />
-                  </Avatar>
+                  <Avatar src={item.thumbnail} size="large" />
                 </ListItemAvatar>
                 <ListItemText
                   primary={item.name}
@@ -144,7 +229,11 @@ function Cart(props) {
                 />
                 <ListItemText primary={item.credit} />
                 <ListItemSecondaryAction>
-                  <IconButton edge="end" aria-label="delete">
+                  <IconButton
+                    edge="end"
+                    aria-label="delete"
+                    onClick={removeFromCart}
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </ListItemSecondaryAction>
@@ -158,7 +247,7 @@ function Cart(props) {
                 </Avatar>
               </ListItemAvatar>
               <ListItemText primary="Total :" />
-              <ListItemText primary={totalCredits} />
+              <ListItemText align="center" primary={totalCredits} />
               <ListItemSecondaryAction>
                 <Button
                   edge="end"
@@ -171,7 +260,7 @@ function Cart(props) {
                 </Button>
               </ListItemSecondaryAction>
             </ListItem>
-          </List>
+          </List> */}
           {/* <table className="table table-stripped">
             <thead>
               <tr>
@@ -201,89 +290,3 @@ function Cart(props) {
 }
 
 export default Cart;
-
-// export class Cart extends Component {
-//   constructor(props) {
-//     super(props);
-//     this.state = {
-//       items: [],
-//       totalCredits: 0,
-//     };
-
-//     this.purchaseCourse = this.purchaseCourse.bind(this);
-//   }
-
-//   async componentDidMount() {
-//     let items = JSON.parse(sessionStorage.getItem("app_cart"));
-//     let service = new CourseService();
-//     let courseList = [];
-//     let totalCredits = 0;
-//     if (items) {
-//       for (let i = 0; i < items.length; i++) {
-//         let data = await service.getCourseById(items[i]);
-//         courseList.push({
-//           id: data._id,
-//           name: data.title,
-//           credit: data.credits.criteria,
-//         });
-//         totalCredits += data.credits.criteria;
-//       }
-//     }
-//     this.setState({
-//       items: courseList,
-//       totalCredits: totalCredits,
-//     });
-//   }
-
-//   async purchaseCourse(e) {
-//     e.preventDefault();
-//     let service = new CourseService();
-//     const items = this.state.items.map((item) => {
-//       return { courseId: item.id, credit: item.credit };
-//     });
-//     const data = {
-//       items: items,
-//     };
-//     const result = await service.purchaseCourse(data);
-//     if (result) {
-//       sessionStorage.setItem("app_cart", []);
-//       this.props.history.push("/course/subscription");
-//     }
-//   }
-
-//   render() {
-//     const items = this.state.items;
-//     let renderItems = items.map((item) => {
-//       return (
-//         <tr key={item.id}>
-//           <td>{item.name}</td>
-//           <td>{item.credit}</td>
-//         </tr>
-//       );
-//     });
-//     return (
-//       <div>
-//         <table className="table table-stripped">
-//           <thead>
-//             <tr>
-//               <th>Name</th>
-//               <th>Credits</th>
-//             </tr>
-//           </thead>
-//           <tbody>{renderItems}</tbody>
-//           <tfoot>
-//             <tr>
-//               <td>Total: </td>
-//               <td>{this.state.totalCredits}</td>
-//             </tr>
-//           </tfoot>
-//         </table>
-//         <button onClick={this.purchaseCourse} className="btn btn-secondary">
-//           Buy
-//         </button>
-//       </div>
-//     );
-//   }
-// }
-
-// export default Cart;

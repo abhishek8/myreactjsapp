@@ -5,13 +5,11 @@ import FormikControl from "./shared/FormikControl";
 import GoogleLogin from "react-google-login";
 import { Google } from "../config";
 import UserService from "../services/userService";
-//import GoogleReCaptcha from "./shared/GoogleReCaptcha";
 
 const initialValues = {
   name: "",
   email: "",
   profileImg: "",
-  //role: "",
   recaptcha: "",
 };
 
@@ -22,7 +20,6 @@ const validationSchema = Yup.object({
     .max(50, "Max 50 characters or less")
     .required("Required"),
   profileImg: Yup.string(),
-  //role: Yup.string().required("Required"),
   recaptcha: Yup.string().required("Validation Error!"),
 });
 
@@ -92,43 +89,11 @@ function Registration(props) {
               label="Email"
               name="email"
             />
-            {/* <FormikControl
-              control="input"
-              type="text"
-              label="Profile Image"
-              name="profileImg"
-            /> */}
-            {/* <FormikControl
-              control="select"
-              name="role"
-              label="Role"
-              options={[
-                { key: "user", value: "User" },
-                { key: "trainer", value: "Trainer" },
-                { key: "reviewer", value: "Reviewer" },
-              ]}
-              value={formik.values.role}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-            /> */}
             <FormikControl
               control="recaptcha"
               name="recaptcha"
               formik={formik}
             />
-            {/* <FormikControl
-              control="input"
-              type="password"
-              label="Password"
-              name="password"
-            />
-            <FormikControl
-              control="input"
-              type="password"
-              label="Confirm Password"
-              name="confirmPass"
-            /> */}
-            {/* <GoogleReCaptcha /> */}
             <FormikControl control="submit" />
           </Form>
         )}

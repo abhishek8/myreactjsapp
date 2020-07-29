@@ -3,7 +3,8 @@ const bodyParser = require("body-parser");
 const multer = require("multer");
 const cors = require("cors");
 const passport = require("passport");
-const crypto = require("crypto");
+//const crypto = require("crypto");
+const uniqueString = require("unique-string");
 const ffmpeg = require("fluent-ffmpeg");
 const { AppDefaults } = require("./config");
 
@@ -18,7 +19,7 @@ var storage = multer.diskStorage({
     cb(null, "./uploads");
   },
   filename: function (req, file, cb) {
-    req.filename = crypto.randomBytes(64).toString("hex");
+    req.filename = uniqueString();
     cb(null, req.filename + ".mp4");
   },
 });

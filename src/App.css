@@ -1,6 +1,6 @@
 .main {
   position: relative;
-  background-color: rgb(245, 245, 235);
+  background-color: #ffffff;
 }
 
 .navbar-links:hover {
@@ -9,80 +9,23 @@
 
 .container-wrap {
   padding-bottom: 3rem;
-  min-height: 75vh;
-}
-
-img.identity {
-  max-width: 100%;
-  max-height: 275px;
-  height: auto;
-}
-
-.create-form {
-  padding-top: 3.5rem;
-}
-
-.create-form input {
-  color: darkslategray;
-  border-radius: 1rem;
-  padding-left: 1.5rem;
-}
-
-.create-form textarea {
-  border-radius: 1rem;
-  color: darkslategray;
-  height: 10rem !important;
-}
-
-.img-container {
-  padding: 1rem;
-}
-
-.course-desc {
-  color: darkslategrey;
-  padding: 0.5rem 0.75rem 1rem 0.75rem;
-}
-
-.course-desc h2 {
-  text-transform: capitalize;
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-}
-
-.course-desc p {
-  padding-top: 1rem;
-  font-family: "Franklin Gothic Medium", "Arial Narrow", Arial, sans-serif;
-  font-weight: lighter;
-  font-size: medium;
-  text-align: justify;
-}
-
-.course-video {
-  max-width: 90%;
-  height: 400px;
+  min-height: calc(100vh - 116px);
 }
 
 .footer {
   background-color: rgb(35, 30, 40);
   color: white;
   width: 100%;
+  padding: 16px;
 }
 
-.footer a {
+.footer a,
+.footer a:not([href]) {
   color: white;
 }
 
-.footer a:hover {
+.footer a:hover,
+.footer a:not([href]):hover {
   color: rgb(253, 95, 7);
-}
-
-@media only screen and (min-width: 1000px) {
-  .img-container {
-    max-width: 420px;
-  }
-}
-
-@media only screen and (max-width: 766px) {
-  .card {
-    padding: 1.5rem;
-  }
+  text-decoration: none;
 }
