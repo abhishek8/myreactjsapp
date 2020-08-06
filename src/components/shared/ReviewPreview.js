@@ -55,11 +55,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function ReviewPreview(props) {
-  const userInfo = JSON.parse(sessionStorage.getItem("user_info"));
-  const cookieInfo = sessionStorage.getItem("auth_cookie");
-  const isLoggedIn = cookieInfo && cookieInfo.length > 0 ? true : false;
-  const role = userInfo ? userInfo.role : "";
-
   const course = props.course;
   const title = AppUtils.getShortText(props.course.title, 35);
   const author = AppUtils.getShortText(props.course.author.name, 20);
@@ -73,10 +68,6 @@ function ReviewPreview(props) {
   });
 
   const classes = useStyles();
-
-  const checkRole = (name) => {
-    return role === name;
-  };
 
   const verifyCourse = (status) => {
     setConfirmChanges({ state: false, approve: null });
@@ -119,30 +110,22 @@ function ReviewPreview(props) {
           <Typography color="secondary" variant="h6" component="h6">
             {credit}
           </Typography>
-          {isLoggedIn && checkRole("reviewer") && (
-            <>
-              <IconButton
-                variant="contained"
-                color="primary"
-                size="medium"
-                onClick={() =>
-                  setConfirmChanges({ state: true, approve: true })
-                }
-              >
-                <CheckIcon />
-              </IconButton>
-              <IconButton
-                variant="contained"
-                color="secondary"
-                size="medium"
-                onClick={() =>
-                  setConfirmChanges({ state: true, approve: false })
-                }
-              >
-                <CancelRoundedIcon />
-              </IconButton>
-            </>
-          )}
+          <IconButton
+            variant="contained"
+            color="primary"
+            size="medium"
+            onClick={() => setConfirmChanges({ state: true, approve: true })}
+          >
+            <CheckIcon />
+          </IconButton>
+          <IconButton
+            variant="contained"
+            color="secondary"
+            size="medium"
+            onClick={() => setConfirmChanges({ state: true, approve: false })}
+          >
+            <CancelRoundedIcon />
+          </IconButton>
         </CardContent>
       </Card>
 

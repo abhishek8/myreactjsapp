@@ -2,14 +2,9 @@ import React, { useEffect, useState } from "react";
 import CourseService from "../services/courseService";
 import ReviewPreview from "./shared/ReviewPreview";
 
-import {
-  Typography,
-  Grid,
-  Backdrop,
-  CircularProgress,
-  Snackbar,
-} from "@material-ui/core";
+import { Typography, Grid, Snackbar } from "@material-ui/core";
 import Alert from "@material-ui/lab/Alert";
+import Loading from "./shared/Loading";
 
 function ReviewCourses(props) {
   const [courses, setCourses] = useState([]);
@@ -42,9 +37,7 @@ function ReviewCourses(props) {
   return (
     <div>
       <br />
-      <Backdrop open={loading}>
-        <CircularProgress />
-      </Backdrop>
+      <Loading open={loading} />
       <Typography variant="h6" component="h4">
         {courses.length > 0
           ? "Pending Courses"

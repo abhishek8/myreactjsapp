@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useContext } from "react";
 import AppUtils from "../../utilities/AppUtils";
 
 import Grid from "@material-ui/core/Grid";
@@ -11,7 +11,8 @@ import Chip from "@material-ui/core/Chip";
 import ScoreIcon from "@material-ui/icons/Score";
 import ShoppingCartIcon from "@material-ui/icons/ShoppingCart";
 import { makeStyles, Button } from "@material-ui/core";
-import { CartContext } from "../../context";
+import { UserContext } from "../../context/UserContext";
+import { CartContext } from "../../context/CartContext";
 
 const useStyles = makeStyles((theme) => ({
   cardGrid: {
@@ -41,14 +42,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function CoursePreview(props) {
-  const userInfo = JSON.parse(sessionStorage.getItem("user_info"));
-  const cookieInfo = sessionStorage.getItem("auth_cookie");
-  const isLoggedIn = cookieInfo && cookieInfo.length > 0 ? true : false;
-  const role = userInfo ? userInfo.role : "";
-
+  const userContext = useContext(UserContext);
   const cartContext = useContext(CartContext);
-
-  const [cart, setCart] = useState([]);
 
   const course = props.course;
   const title = AppUtils.getShortText(props.course.title, 35);
@@ -60,25 +55,33 @@ function CoursePreview(props) {
   const classes = useStyles();
 
   const checkRole = (name) => {
-    return role === name;
+    return (
+      userContext.userState &&
+      userContext.userState.user &&
+      userContext.userState.user["role"] === name
+    );
   };
 
   const showCart = () => {
-    return isLoggedIn && checkRole("user") && props.checkForCart;
+    return (
+      userContext.userState.isAuthenticated &&
+      checkRole("user") &&
+      props.displayCart
+    );
   };
 
   // const toggleCart = () => {
   //   return cart ? cart.includes(course._id) : false;
   // };
 
-  const addToCart = (e) => {
-    e.preventDefault();
-    cartContext.cartDispatch({ type: "add", courseId: course._id });
-    var cartItems = cart ? cart : [];
-    cartItems.push(course._id);
-    sessionStorage.setItem("app_cart", JSON.stringify(cartItems));
-    setCart((prev) => [...prev, course._id]);
-  };
+  //const addToCart = (e) => {
+  //e.preventDefault();
+  //cartContext.cartDispatch({ type: "ADD", courseId: course._id });
+  //var cartItems = cart ? cart : [];
+  //cartItems.push(course._id);
+  //sessionStorage.setItem("app_cart", JSON.stringify(cartItems));
+  //setCart((prev) => [...prev, course._id]);
+  //};
 
   return (
     <Grid item xs={12} sm={4} md={3} key={course._id}>
@@ -118,26 +121,32 @@ function CoursePreview(props) {
               {credit}
             </Typography>
           )}
-          {showCart() && !(cart && cart.includes(course._id)) && (
-            <Button
-              variant="contained"
-              color="primary"
-              size="small"
-              onClick={addToCart}
-            >
-              Add to <ShoppingCartIcon />
-            </Button>
-          )}
-          {showCart() && cart && cart.includes(course._id) && (
-            <Button
-              variant="contained"
-              color="secondary"
-              size="small"
-              onClick={() => props.history.push("/user/cart")}
-            >
-              Go to <ShoppingCartIcon />
-            </Button>
-          )}
+          {showCart() &&
+            !(
+              cartContext.cartState &&
+              cartContext.cartState.includes(course._id)
+            ) && (
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
+                onClick={() => props.addToCart(course._id)}
+              >
+                Add to <ShoppingCartIcon />
+              </Button>
+            )}
+          {showCart() &&
+            cartContext.cartState &&
+            cartContext.cartState.includes(course._id) && (
+              <Button
+                variant="contained"
+                color="secondary"
+                size="small"
+                onClick={() => props.history.push("/user/cart")}
+              >
+                Go to <ShoppingCartIcon />
+              </Button>
+            )}
         </CardContent>
       </Card>
     </Grid>

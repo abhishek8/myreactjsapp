@@ -54,13 +54,19 @@ function Footer() {
               Browser: IE 10 and above, Edge 40, Firefox and Chrome (last 3
               versions), Safari (Mac)
             </Typography>
+          </DialogContentText>
+          <DialogContentText>
             <Typography variant="subtitle1" component="span">
               Desktop Resolution: 1360*768, 1366*768, 1280*1024
             </Typography>
+          </DialogContentText>
+          <DialogContentText>
             <Typography variant="subtitle1" component="span">
               OS: Win 7 and above, macOS High Sierra, iOS 9 and above, Android 6
               and above
             </Typography>
+          </DialogContentText>
+          <DialogContentText>
             <Typography variant="subtitle1" component="span">
               Device: Android, iPhone 5S and above, iPad
             </Typography>

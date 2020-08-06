@@ -1,20 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import GoogleLogin from "react-google-login";
 import { Google } from "../config";
 import UserService from "../services/userService";
 
 import Avatar from "@material-ui/core/Avatar";
 import Button from "@material-ui/core/Button";
-//import CssBaseline from "@material-ui/core/CssBaseline";
 import TextField from "@material-ui/core/TextField";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
 import Checkbox from "@material-ui/core/Checkbox";
 import Link from "@material-ui/core/Link";
-//import Paper from "@material-ui/core/Paper";
 import Grid from "@material-ui/core/Grid";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
 import Typography from "@material-ui/core/Typography";
-import { Backdrop, CircularProgress } from "@material-ui/core";
 import IconButton from "@material-ui/core/IconButton";
 import { makeStyles } from "@material-ui/core/styles";
 import Icon from "@material-ui/core/Icon";
@@ -23,6 +20,8 @@ import { loadCSS } from "fg-loadcss";
 
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
+import { UserContext } from "../context/UserContext";
+import Loading from "./shared/Loading";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -64,6 +63,8 @@ function Login(props) {
   const userService = new UserService();
   const { params } = props.match;
   const userRole = params.role ? params.role : "user";
+
+  const userContext = useContext(UserContext);
 
   const [open, setOpen] = useState(false);
   const classes = useStyles();
@@ -116,8 +117,8 @@ function Login(props) {
     setOpen(true);
     authenticateUser(email, password).then((result) => {
       if (result && result.success === true) {
-        sessionStorage.setItem("auth_cookie", result.data.token.toString());
-        sessionStorage.setItem("user_info", JSON.stringify(result.data));
+        const payload = { userInfo: result.data, token: result.data.token };
+        userContext.userDispatch({ type: "LOGIN", payload: payload });
         navigateAfterLogin();
       } else {
         handleAuthFailure(result);
@@ -136,8 +137,11 @@ function Login(props) {
       );
 
       if (result && result.success === true) {
-        sessionStorage.setItem("auth_cookie", result.data.token.toString());
-        sessionStorage.setItem("user_info", JSON.stringify(result.data));
+        const payload = {
+          userInfo: result.data,
+          token: result.data.token.toString(),
+        };
+        userContext.userDispatch({ type: "LOGIN", payload: payload });
         navigateAfterLogin();
       } else {
         handleAuthFailure(result);
@@ -163,9 +167,7 @@ function Login(props) {
 
   return (
     <>
-      <Backdrop open={open} style={{ zIndex: 35001 }}>
-        <CircularProgress color="primary" />
-      </Backdrop>
+      <Loading open={open} />
       <Avatar className={classes.avatar}>
         <LockOutlinedIcon />
       </Avatar>

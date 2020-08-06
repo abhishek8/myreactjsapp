@@ -69,15 +69,13 @@ function MyCourse(props) {
           <MyCoursePreview
             key={course._id}
             course={course}
-            handleEdit={() =>
-              props.history.push(`/course/create/${course._id}`)
-            }
+            handleEdit={() => props.history.push(`/course/edit/${course._id}`)}
             handleRemove={removeCourse}
             handleClick={() => props.history.push(`/video/${course._id}`)}
           />
         ))}
       </Grid>
-      {loading && <Loading />}
+      <Loading open={loading} />
       <Snackbar
         open={deleteSuccess}
         autoHideDuration={6000}
@@ -99,64 +97,3 @@ function MyCourse(props) {
 }
 
 export default MyCourse;
-
-// import React, { Component } from "react";
-// import VideoPreview from "./shared/VideoPreview";
-// import CourseService from "../services/courseService";
-
-// export class MyCourse extends Component {
-//   constructor(props) {
-//     super(props);
-//     this.state = {
-//       courseList: [],
-//     };
-//     this.removeCourse = this.removeCourse.bind(this);
-//   }
-
-//   async componentDidMount() {
-//     let service = new CourseService();
-//     let courseList = await service.getCourseForTrainer();
-//     this.setState({
-//       courseList: courseList,
-//     });
-//   }
-
-//   removeCourse(course) {
-//     let service = new CourseService();
-//     service
-//       .deleteCourse(course._id)
-//       .then((res) => {
-//         if (res) {
-//           let courseList = this.state.courseList.filter(
-//             (c) => c._id !== res._id
-//           );
-//           this.setState({
-//             courseList: courseList,
-//           });
-//         }
-//       })
-//       .catch((err) => console.log(err));
-//   }
-
-//   render() {
-//     return (
-//       <div>
-//         <button
-//           onClick={() => this.props.history.push("/course/create")}
-//           className="btn btn-secondary"
-//         >
-//           Create
-//         </button>
-//         <div>
-//           <VideoPreview
-//             courseList={this.state.courseList}
-//             removeCourse={this.removeCourse}
-//             {...this.props}
-//           />
-//         </div>
-//       </div>
-//     );
-//   }
-// }
-
-// export default MyCourse;

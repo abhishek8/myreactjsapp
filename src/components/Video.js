@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import ReactPlayer from "react-player";
 import CourseService from "../services/courseService";
 import AppUtils from "../utilities/AppUtils";
@@ -20,6 +20,8 @@ import {
 import Rating from "@material-ui/lab/Rating";
 import Alert from "@material-ui/lab/Alert";
 import ScoreIcon from "@material-ui/icons/Score";
+import { UserContext } from "../context/UserContext";
+import UserService from "../services/userService";
 
 const useStyles = makeStyles((theme) => ({
   videoGrid: {
@@ -38,8 +40,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function Video(props) {
-  const userInfo = JSON.parse(sessionStorage.getItem("user_info"));
-  const role = userInfo ? userInfo.role : "";
+  const userContext = useContext(UserContext);
+  const [userDetails, setUserDetails] = useState({});
 
   const [course, setCourse] = useState(null);
   const [courseComplete, setcourseComplete] = useState(false);
@@ -55,11 +57,29 @@ function Video(props) {
     let service = new CourseService();
     service.getCourseById(params.id).then((res) => {
       if (res) {
-        console.log(res);
         setCourse(res);
       }
     });
   }, [params]);
+
+  useEffect(() => {
+    let userService = new UserService();
+    userService.fetchUserDetails().then((res) => {
+      if (res) {
+        setUserDetails(res);
+      }
+    });
+  }, []);
+
+  const showForRating = () => {
+    let notRated = !(
+      userDetails.history &&
+      userDetails.history.watched &&
+      userDetails.history.watched.includes(params.id)
+    );
+
+    return userDetails.role === "user" && notRated;
+  };
 
   const postRating = async (e) => {
     e.preventDefault();
@@ -70,12 +90,17 @@ function Video(props) {
       courseId: params.id,
       rating_value: Number(rating),
     });
-    if (result && result.success) {
-      setRatingSuccess(true);
-    } else {
-      setRatingFailure(true);
+    if (result) {
+      result.success ? setRatingSuccess(true) : setRatingFailure(true);
+      userContext.userDispatch({ type: "RESET" });
     }
     setcourseComplete(false);
+  };
+
+  const handleEnd = () => {
+    if (showForRating()) {
+      setcourseComplete(true);
+    }
   };
 
   return (
@@ -90,7 +115,7 @@ function Video(props) {
                 height="100%"
                 width="100%"
                 controls={true}
-                onEnded={() => setcourseComplete(true)}
+                onEnded={() => handleEnd()}
               />
             </Grid>
           </Grid>
@@ -133,7 +158,7 @@ function Video(props) {
         disableBackdropClick
         disableEscapeKeyDown
         keepMounted
-        open={courseComplete && role === "user"}
+        open={courseComplete}
         onClose={() => setcourseComplete(false)}
       >
         <DialogTitle>Please provide your rating</DialogTitle>
@@ -180,97 +205,3 @@ function Video(props) {
 }
 
 export default Video;
-
-// class Video extends React.Component {
-//   constructor(props) {
-//     super(props);
-//     this.state = {
-//       course: null,
-//     };
-//     this.handleComplete = this.handleComplete.bind(this);
-//     this.postRating = this.postRating.bind(this);
-//   }
-
-//   async componentDidMount() {
-//     let { params } = this.props.match;
-//     let serviceObj = new CourseService();
-//     let courseDetails = await serviceObj.getCourseById(params.id);
-
-//     if (courseDetails) {
-//       this.setState({
-//         course: courseDetails,
-//       });
-//     }
-//   }
-
-//   handleComplete(e) {
-//     console.log("Ended");
-//     this.setState({
-//       isCompleted: true,
-//     });
-//   }
-
-//   async postRating(e) {
-//     e.preventDefault();
-//     let { params } = this.props.match;
-//     let service = new CourseService();
-//     let result = await service.postRating({
-//       courseId: params.id,
-//       rating_value: Number(this.state.rating),
-//     });
-//     if (result && result.success) {
-//       alert(result.message);
-//     }
-//   }
-
-//   render() {
-//     let renderPlayer = <Loading />;
-//     let course = this.state.course;
-//     if (course) {
-//       renderPlayer = (
-//         <>
-//           <Container
-//             maxWidth="md"
-//             style={{ paddingTop: "16px", paddingLeft: "0px" }}
-//           >
-//             <ReactPlayer
-//               url={course.courseLink}
-//               light={course.thumbnail}
-//               controls={true}
-//               onEnded={this.handleComplete}
-//             />
-//           </Container>
-//           <h3>{course.title}</h3>
-//           <h6>{course.author.name}</h6>
-//           <h6>
-//             {course.publishedDate
-//               ? AppUtils.formatDateString(course.publishedDate)
-//               : "Not verified yet"}
-//           </h6>
-//           <div>
-//             {this.state.isCompleted && (
-//               <>
-//                 <h3>Completed</h3>
-//                 <select
-//                   name="rating"
-//                   value={this.state.rating}
-//                   onChange={(e) => this.setState({ rating: e.target.value })}
-//                 >
-//                   <option value="5">5</option>
-//                   <option value="4">4</option>
-//                   <option value="3">3</option>
-//                   <option value="2">2</option>
-//                   <option value="1">1</option>
-//                 </select>
-//                 <button onClick={this.postRating}>Post Rating</button>
-//               </>
-//             )}
-//           </div>
-//         </>
-//       );
-//     }
-//     return <div>{renderPlayer}</div>;
-//   }
-// }
-
-// export default Video;

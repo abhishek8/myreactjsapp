@@ -1,10 +1,10 @@
 import React from "react";
 import { Backdrop, CircularProgress } from "@material-ui/core";
 
-function Loading() {
+function Loading(props) {
   return (
-    <Backdrop open={true} style={{ zIndex: 34002 }}>
-      <CircularProgress color="primary" />
+    <Backdrop open={props.open} style={{ zIndex: 34002 }}>
+      <CircularProgress color="secondary" />
     </Backdrop>
   );
 }

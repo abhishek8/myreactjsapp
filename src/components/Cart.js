@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
 import CourseService from "../services/courseService";
 import {
   Typography,
@@ -16,9 +16,16 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  Snackbar,
+  Dialog,
+  DialogTitle,
+  DialogActions,
 } from "@material-ui/core";
 import DeleteIcon from "@material-ui/icons/Delete";
 import Container from "react-bootstrap/Container";
+import { CartContext } from "../context/CartContext";
+import { UserContext } from "../context/UserContext";
+import Alert from "@material-ui/lab/Alert";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -41,14 +48,20 @@ const useStyles = makeStyles((theme) => ({
 function Cart(props) {
   const [cartItems, setCartItems] = useState([]);
   const [totalCredits, setTotalCredits] = useState(0);
+
+  const [confirmPurchase, setConfirmPurchase] = useState(false);
+  const [purchaseSuccess, setPurchaseSuccess] = useState(false);
+  const [purchaseError, setPurchaseError] = useState(false);
+  const [lessBalance, setLessBalance] = useState(false);
   const courseService = new CourseService();
+
+  const userContext = useRef(useContext(UserContext));
+  const cartContext = useContext(CartContext);
 
   const classes = useStyles();
 
   useEffect(() => {
-    const courseList = sessionStorage.getItem("app_cart")
-      ? JSON.parse(sessionStorage.getItem("app_cart"))
-      : [];
+    const courseList = cartContext.cartState;
     if (courseList && courseList.length > 0) {
       const fetchCartItems = async (courseId) => {
         const service = new CourseService();
@@ -69,46 +82,51 @@ function Cart(props) {
         fetchCartItems(courseId);
       });
     }
-  }, []);
+  }, [cartContext]);
 
   useEffect(() => {
     if (cartItems.length > 0) {
+      console.log(cartItems);
       let total = 0;
       cartItems.forEach((item) => {
         total += item.credit;
       });
-      console.log(total);
       setTotalCredits(total);
     }
   }, [cartItems]);
 
-  const removeFromCart = async (courseId) => {
-    let items = JSON.parse(sessionStorage.getItem("app_cart"));
-    items.splice(items.indexOf(courseId), 1);
-    sessionStorage.setItem("app_cart", JSON.stringify(items));
-
-    let cart = cartItems;
-    cart = cart.filter((item) => item.id !== courseId);
-    setCartItems(cart);
+  const removeFromCart = (courseId) => {
+    cartContext.cartDispatch({ type: "REMOVE", courseId: courseId });
+    setCartItems((prev) => prev.filter((c) => c.id !== courseId));
   };
 
   const purchaseCourse = async (event) => {
     event.preventDefault();
 
-    const items = cartItems.map((item) => {
-      return { courseId: item.id, credit: item.credit };
-    });
+    const balance = userContext.current.userState.user["creditBalance"];
+    if (balance < totalCredits) setLessBalance(true);
+    else {
+      const items = cartItems.map((item) => {
+        return { courseId: item.id, credit: item.credit };
+      });
 
-    const data = {
-      items: items,
-    };
+      const data = {
+        items: items,
+      };
 
-    const result = await courseService.purchaseCourse(data);
+      const result = await courseService.purchaseCourse(data);
 
-    if (result) {
-      sessionStorage.setItem("app_cart", []);
-      props.history.push("/course/subscription");
+      if (result) {
+        cartContext.cartDispatch({ type: "CLEAR" });
+        userContext.current.userDispatch({ type: "RESET" });
+        props.history.push("/course/subscription");
+        setPurchaseSuccess(true);
+      } else {
+        setPurchaseError(true);
+      }
     }
+
+    setConfirmPurchase(false);
   };
 
   return (
@@ -192,10 +210,20 @@ function Cart(props) {
                   <TableCell />
                 </TableRow>
                 <TableRow>
-                  <TableCell colSpan={3} />
+                  <TableCell colSpan={3}>
+                    <Typography
+                      color="secondary"
+                      variant="caption"
+                      component="span"
+                    >
+                      You have{" "}
+                      {userContext.current.userState.user.creditBalance} credits
+                      in your account.
+                    </Typography>
+                  </TableCell>
                   <TableCell align="center">
                     <Button
-                      onClick={purchaseCourse}
+                      onClick={() => setConfirmPurchase(true)}
                       variant="contained"
                       color="primary"
                       size="medium"
@@ -207,84 +235,43 @@ function Cart(props) {
               </TableBody>
             </Table>
           </TableContainer>
-
-          {/* <List dense={false}>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar>
-                  <FolderSpecialSharpIcon />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText primary="Name" />
-              <ListItemText primary="Credits" />
-            </ListItem>
-            {cartItems.map((item) => (
-              <ListItem key={item.id} justify="center">
-                <ListItemAvatar>
-                  <Avatar src={item.thumbnail} size="large" />
-                </ListItemAvatar>
-                <ListItemText
-                  primary={item.name}
-                  secondary={item.author ? item.author : null}
-                />
-                <ListItemText primary={item.credit} />
-                <ListItemSecondaryAction>
-                  <IconButton
-                    edge="end"
-                    aria-label="delete"
-                    onClick={removeFromCart}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                </ListItemSecondaryAction>
-              </ListItem>
-            ))}
-            <hr />
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar>
-                  <FolderSpecialSharpIcon />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText primary="Total :" />
-              <ListItemText align="center" primary={totalCredits} />
-              <ListItemSecondaryAction>
-                <Button
-                  edge="end"
-                  onClick={purchaseCourse}
-                  variant="contained"
-                  color="primary"
-                  size="medium"
-                >
-                  Buy
-                </Button>
-              </ListItemSecondaryAction>
-            </ListItem>
-          </List> */}
-          {/* <table className="table table-stripped">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Credits</th>
-              </tr>
-            </thead>
-            <tbody>
-              {cartItems.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.name}</td>
-                  <td>{item.credit}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td>Total: </td>
-                <td>{totalCredits}</td>
-              </tr>
-            </tfoot>
-          </table> */}
         </>
       )}
+      <Dialog open={confirmPurchase}>
+        <DialogTitle>Do you wish to proceed with the transaction</DialogTitle>
+        <DialogActions>
+          <Button color="secondary" onClick={() => setConfirmPurchase(false)}>
+            Cancel
+          </Button>
+          <Button color="primary" onClick={purchaseCourse}>
+            Buy
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar
+        open={purchaseError}
+        autoHideDuration={5000}
+        onClose={() => setPurchaseError(false)}
+      >
+        <Alert severity="error">
+          Transaction Failed! Please try again or get in touch with support
+          team.
+        </Alert>
+      </Snackbar>
+      <Snackbar
+        open={lessBalance}
+        autoHideDuration={5000}
+        onClose={() => setLessBalance(false)}
+      >
+        <Alert severity="error">Transaction Failed! Insufficient Balace.</Alert>
+      </Snackbar>
+      <Snackbar
+        open={purchaseSuccess}
+        autoHideDuration={5000}
+        onClose={() => setPurchaseSuccess(false)}
+      >
+        <Alert severity="success">Your transaction is successful.</Alert>
+      </Snackbar>
     </div>
   );
 }

@@ -145,7 +145,7 @@ export default class CourseService {
         if (res) return res.data;
         console.log(res);
       })
-      .catch((err) => console.log(err));
+      .catch((err) => console.log(err.response));
   }
 
   deleteCourse(courseId) {

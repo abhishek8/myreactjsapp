@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
+import Loading from "./shared/Loading";
 import FormikControl from "./shared/FormikControl";
 import GoogleLogin from "react-google-login";
 import { Google } from "../config";
@@ -22,7 +23,7 @@ import { loadCSS } from "fg-loadcss";
 
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
-import { Backdrop, CircularProgress } from "@material-ui/core";
+//import { Backdrop, CircularProgress } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
   paper: {
@@ -157,9 +158,7 @@ function Register(props) {
       style={{ backgroundColor: "#fff" }}
     >
       <CssBaseline />
-      <Backdrop style={{ zIndex: 34001 }} open={open}>
-        <CircularProgress color="primary" />
-      </Backdrop>
+      <Loading open={open} />
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
           <LockOutlinedIcon />

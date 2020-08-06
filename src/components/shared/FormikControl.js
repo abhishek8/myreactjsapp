@@ -1,7 +1,5 @@
 import React from "react";
 import { ErrorMessage } from "formik";
-//import SiteReCaptcha from "./SiteReCaptcha";
-//import GoogleReCaptcha from "./GoogleReCaptcha";
 import { ReCaptcha } from "react-recaptcha-v3";
 import { GoogleReCaptcha as ReCaptchaSettings } from "../../config";
 

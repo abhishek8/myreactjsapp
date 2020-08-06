@@ -55,9 +55,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function MyCoursePreview(props) {
-  const userInfo = JSON.parse(sessionStorage.getItem("user_info"));
-  const role = userInfo ? userInfo.role : "";
-
   const course = props.course;
   const title = AppUtils.getShortText(props.course.title, 35);
   const author = AppUtils.getShortText(props.course.author.name, 20);
@@ -68,10 +65,6 @@ function MyCoursePreview(props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const classes = useStyles();
-
-  const checkRole = (name) => {
-    return role === name;
-  };
 
   const removeCourse = (e) => {
     setConfirmDelete(false);
@@ -114,26 +107,22 @@ function MyCoursePreview(props) {
           <Typography color="secondary" variant="h6" component="h6">
             {credit}
           </Typography>
-          {checkRole("trainer") && (
-            <>
-              <IconButton
-                variant="contained"
-                color="primary"
-                size="medium"
-                onClick={props.handleEdit}
-              >
-                <EditIcon />
-              </IconButton>
-              <IconButton
-                variant="contained"
-                color="secondary"
-                size="medium"
-                onClick={() => setConfirmDelete(true)}
-              >
-                <DeleteForeverIcon />
-              </IconButton>
-            </>
-          )}
+          <IconButton
+            variant="contained"
+            color="primary"
+            size="medium"
+            onClick={props.handleEdit}
+          >
+            <EditIcon />
+          </IconButton>
+          <IconButton
+            variant="contained"
+            color="secondary"
+            size="medium"
+            onClick={() => setConfirmDelete(true)}
+          >
+            <DeleteForeverIcon />
+          </IconButton>
         </CardContent>
       </Card>
 

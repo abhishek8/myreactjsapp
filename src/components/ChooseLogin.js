@@ -31,6 +31,7 @@ const useStyles = makeStyles((theme) => ({
 
 function ChooseLogin(props) {
   const classes = useStyles();
+
   return (
     <Container maxWidth="md">
       <Grid container>
@@ -60,7 +61,9 @@ function ChooseLogin(props) {
             <Button
               variant="contained"
               color="primary"
-              onClick={() => props.history.push("/app-login/trainer")}
+              onClick={() =>
+                props.history.push("/app-login/trainer" + props.location.search)
+              }
             >
               Login as Trainer
             </Button>
@@ -93,7 +96,9 @@ function ChooseLogin(props) {
             <Button
               variant="contained"
               color="primary"
-              onClick={() => props.history.push("/app-login")}
+              onClick={() =>
+                props.history.push("/app-login" + props.location.search)
+              }
             >
               Login as Learner
             </Button>

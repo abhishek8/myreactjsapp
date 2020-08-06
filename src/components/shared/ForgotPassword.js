@@ -3,14 +3,9 @@ import { Formik, Form } from "formik";
 import * as Yup from "yup";
 import FormikControl from "./FormikControl";
 import UserService from "../../services/userService";
-import {
-  Avatar,
-  Typography,
-  makeStyles,
-  Backdrop,
-  CircularProgress,
-} from "@material-ui/core";
+import { Avatar, Typography, makeStyles } from "@material-ui/core";
 import LockOutlinedIcon from "@material-ui/icons/LockOutlined";
+import Loading from "./Loading";
 
 const useStyles = makeStyles((theme) => ({
   avatar: {
@@ -49,13 +44,7 @@ function ForgotPassword() {
 
   return (
     <>
-      <Backdrop
-        open={loading}
-        style={{ zIndex: 35001 }}
-        onClick={() => toggleLoading(false)}
-      >
-        <CircularProgress color="primary" />
-      </Backdrop>
+      <Loading open={loading} />
       <Avatar className={classes.avatar}>
         <LockOutlinedIcon />
       </Avatar>

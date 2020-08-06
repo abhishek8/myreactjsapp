@@ -203,6 +203,7 @@ const userLogin = async (req, role, res) => {
         name: user.name,
         role: user.role,
         profileImage: user.profileImage,
+        creditBalance: user.creditBalance,
         token: `Bearer ${token}`,
         expiresIn: 168,
       };

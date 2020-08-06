@@ -4,6 +4,8 @@ import { AppDefault } from "../config";
 import { Grid, Typography } from "@material-ui/core";
 import EmailRoundedIcon from "@material-ui/icons/EmailRounded";
 import VerifiedUserIcon from "@material-ui/icons/VerifiedUser";
+import AccountBalanceIcon from "@material-ui/icons/AccountBalance";
+import UserService from "../services/userService";
 
 function Profile(props) {
   const [profileInfo, setProfileInfo] = useState({
@@ -11,21 +13,24 @@ function Profile(props) {
     profileImg: AppDefault.noImage,
     role: "unknown",
     email: "",
+    balance: 0,
   });
 
   useEffect(() => {
-    let userData = JSON.parse(sessionStorage.getItem("user_info"));
-
-    if (userData) {
-      // let picExists = await AppUtils.checkImageExists(userData.imageUrl);
-      let picUrl = userData.profileImage;
-      setProfileInfo({
-        username: userData.name,
-        profileImg: picUrl ? picUrl : AppDefault.noImage,
-        email: userData.email,
-        role: AppUtils.capitalize(userData.role),
-      });
-    }
+    const service = new UserService();
+    service.fetchUserDetails().then((userData) => {
+      if (userData) {
+        let picUrl = userData.profileImage;
+        setProfileInfo({
+          username: AppUtils.capitalize(userData.name),
+          profileImg: picUrl ? picUrl : AppDefault.noImage,
+          email: userData.email,
+          role: AppUtils.capitalize(userData.role),
+          balance: userData.creditBalance,
+        });
+      }
+    });
+    console.log("UseEffect - Profile");
   }, []);
 
   return (
@@ -45,6 +50,11 @@ function Profile(props) {
           <Typography variant="h6" component="h6">
             <VerifiedUserIcon /> {profileInfo.role}
           </Typography>
+          {profileInfo.role === "User" && (
+            <Typography variant="h6" component="h6">
+              <AccountBalanceIcon /> {profileInfo.balance} Credits
+            </Typography>
+          )}
         </Grid>
       </Grid>
     </div>

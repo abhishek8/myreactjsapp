@@ -60,7 +60,11 @@ function ChooseRegister(props) {
             <Button
               variant="contained"
               color="primary"
-              onClick={() => props.history.push("/app-register/trainer")}
+              onClick={() =>
+                props.history.push(
+                  "/app-register/trainer" + props.location.search
+                )
+              }
             >
               Join as Trainer
             </Button>
@@ -93,7 +97,9 @@ function ChooseRegister(props) {
             <Button
               variant="contained"
               color="primary"
-              onClick={() => props.history.push("/app-register")}
+              onClick={() =>
+                props.history.push("/app-register" + props.location.search)
+              }
             >
               Join as Learner
             </Button>

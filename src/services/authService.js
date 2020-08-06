@@ -1,33 +1,33 @@
-import React from "react";
+import React, { useEffect, useContext } from "react";
 import { withRouter } from "react-router";
+import { UserContext } from "../context/UserContext";
 
-export default function requireAuth(Component) {
-  class AuthenticatedComponent extends React.Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        auth: sessionStorage.getItem("auth_cookie"),
-      };
-    }
+const checkAuthorization = (context, role) => {
+  let isAuthorized =
+    context && context.userState && context.userState.isAuthenticated;
+  if (role && role.length > 0 && isAuthorized) {
+    isAuthorized =
+      context.userState.user && role.includes(context.userState.user["role"]);
+  }
+  return isAuthorized;
+};
 
-    componentDidMount() {
-      this.checkAuth();
-    }
+export default function requireAuth(Component, role) {
+  function AuthenticatedComponent(props) {
+    const userContext = useContext(UserContext);
 
-    checkAuth() {
-      const location = this.props.location;
+    useEffect(() => {
+      const location = props.location;
       const redirect = location.pathname + location.search;
-      if (!sessionStorage.getItem("auth_cookie")) {
-        this.props.history.push(`/login?returnUrl=${redirect}`);
-        sessionStorage.setItem("returnUrl", redirect);
-      }
-    }
+      console.log("UseEffect - AuthService");
 
-    render() {
-      return sessionStorage.getItem("auth_cookie") ? (
-        <Component {...this.props} />
-      ) : null;
-    }
+      if (!checkAuthorization(userContext, role))
+        props.history.push(`/login?return=${redirect}`);
+    }, [props, userContext]);
+
+    return checkAuthorization(userContext, role) ? (
+      <Component {...props} />
+    ) : null;
   }
   return withRouter(AuthenticatedComponent);
 }

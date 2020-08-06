@@ -273,12 +273,41 @@ const updateCourseRatings = async (req, res) => {
 
     rating
       .save()
-      .then(() => {
-        return res.status(200).json({
-          success: true,
-          id: rating._id,
-          message: "Course rated successfuly!",
-        });
+      .then(async () => {
+        const alreadyRated =
+          req.user.history &&
+          req.user.history.watched &&
+          req.user.history.watched.includes(body.courseId);
+        if (!alreadyRated) {
+          const course = await Course.findOne({ _id: body.courseId });
+          var user = new User(req.user);
+          user.creditBalance = user.creditBalance + course.credits.score;
+          user.history.watched = [...user.history.watched, course._id];
+          user
+            .save()
+            .then(() => {
+              return res.status(200).json({
+                success: true,
+                id: rating._id,
+                message:
+                  "Course rated successfully! Credits points added to user.",
+              });
+            })
+            .catch((error) => {
+              console.log(error);
+              return res.status(500).json({
+                error,
+                message:
+                  "Course has been rated but credit could not be awarded.",
+              });
+            });
+        } else {
+          return res.status(200).json({
+            success: true,
+            id: rating._id,
+            message: "Course rated successfully!",
+          });
+        }
       })
       .catch((error) => {
         return res.status(404).json({
