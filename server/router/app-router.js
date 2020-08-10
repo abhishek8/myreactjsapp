@@ -72,6 +72,20 @@ router.get(
 );
 
 router.get(
+  "/course/unverified/",
+  UserCtrl.userAuth,
+  UserCtrl.checkRole(["reviewer"]),
+  CourseCtrl.getUnverifiedCourses
+);
+
+router.get(
+  "/course/verified/",
+  UserCtrl.userAuth,
+  UserCtrl.checkRole(["reviewer"]),
+  CourseCtrl.getReviewedCourses
+);
+
+router.get(
   "/course/:id",
   UserCtrl.userAuth,
   UserCtrl.checkRole(["user", "trainer", "reviewer"]),

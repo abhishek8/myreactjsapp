@@ -105,6 +105,46 @@ const getCourseDetails = async (req, res) => {
   }).catch((err) => console.log(err));
 };
 
+const getUnverifiedCourses = async (req, res) => {
+  Course.find(
+    {
+      publishedDate: { $exists: false },
+    },
+    async (err, courses) => {
+      if (err) {
+        return res.status(400).json({ success: false, error: err });
+      }
+
+      const data = await Promise.all(
+        courses.map((course) => serializedCourse(course))
+      );
+
+      return res.status(200).json({ success: true, data: data });
+    }
+  ).catch((err) => console.log(err));
+};
+
+const getReviewedCourses = async (req, res) => {
+  const { status } = url.parse(req.url, true).query;
+  Course.find(
+    {
+      "verification.status": status,
+      "verification.verificationId": req.user._id.toString(),
+    },
+    async (err, courses) => {
+      if (err) {
+        return res.status(400).json({ success: false, error: err });
+      }
+
+      const data = await Promise.all(
+        courses.map((course) => serializedCourse(course))
+      );
+
+      return res.status(200).json({ success: true, data: data });
+    }
+  ).catch((err) => console.log(err));
+};
+
 const serializedCourse = async (course) => {
   var total_count = 0,
     avg_rating = 0;
@@ -396,6 +436,8 @@ module.exports = {
   getCoursesByAuthor,
   getUserPurchasedCourses,
   getCourseDetails,
+  getUnverifiedCourses,
+  getReviewedCourses,
   createCourse,
   verifyCourse,
   updateCourseRatings,

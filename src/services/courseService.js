@@ -45,6 +45,34 @@ export default class CourseService {
       .catch((err) => console.log(err));
   };
 
+  getUnverifiedCourses = () => {
+    return axios
+      .get(`${Server.BASE_API_URL}/course/unverified`, {
+        headers: {
+          Authorization: this.accessToken,
+        },
+      })
+      .then((res) => {
+        if (res.data && res.data.success) return res.data.data;
+        console.log(res);
+      })
+      .catch((err) => console.log(err.response));
+  };
+
+  getVerifiedCoursesForReviewer = (status) => {
+    return axios
+      .get(`${Server.BASE_API_URL}/course/verified?status=${status}`, {
+        headers: {
+          Authorization: this.accessToken,
+        },
+      })
+      .then((res) => {
+        if (res.data && res.data.success) return res.data.data;
+        console.log(res);
+      })
+      .catch((err) => console.log(err.response));
+  };
+
   getPurchasedCourse = () => {
     return axios
       .get(`${Server.BASE_API_URL}/course/subscription/`, {
