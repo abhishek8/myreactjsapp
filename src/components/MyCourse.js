@@ -3,12 +3,19 @@ import MyCoursePreview from "./shared/MyCoursePreview";
 import Loading from "./shared/Loading";
 import CourseService from "../services/courseService";
 
-import { Grid, Button, Typography, Snackbar } from "@material-ui/core";
+import {
+  Grid,
+  Button,
+  Typography,
+  Snackbar,
+  TablePagination,
+} from "@material-ui/core";
 import CreateSharpIcon from "@material-ui/icons/CreateSharp";
 import Alert from "@material-ui/lab/Alert";
 
 function MyCourse(props) {
   const [courses, setCourses] = useState([]);
+  const [page, setPage] = useState(0);
 
   const [loading, setLoading] = useState(false);
   const [deleteSuccess, setdeleteSuccess] = useState(false);
@@ -45,6 +52,10 @@ function MyCourse(props) {
       });
   };
 
+  const handlePageChange = (event, newPage) => {
+    setPage(newPage);
+  };
+
   return (
     <div>
       <br />
@@ -65,16 +76,31 @@ function MyCourse(props) {
       <br />
 
       <Grid container spacing={4}>
-        {courses.map((course) => (
-          <MyCoursePreview
-            key={course._id}
-            course={course}
-            handleEdit={() => props.history.push(`/course/edit/${course._id}`)}
-            handleRemove={removeCourse}
-            handleClick={() => props.history.push(`/video/${course._id}`)}
-          />
-        ))}
+        {courses
+          .slice(
+            page * 4,
+            page * 4 + 4 > courses.length ? courses.length : page * 4 + 4
+          )
+          .map((course) => (
+            <MyCoursePreview
+              key={course._id}
+              course={course}
+              handleEdit={() =>
+                props.history.push(`/course/edit/${course._id}`)
+              }
+              handleRemove={removeCourse}
+              handleClick={() => props.history.push(`/video/${course._id}`)}
+            />
+          ))}
       </Grid>
+      <TablePagination
+        component="div"
+        count={courses.length}
+        page={page}
+        rowsPerPage={4}
+        rowsPerPageOptions={[4]}
+        onChangePage={handlePageChange}
+      ></TablePagination>
       <Loading open={loading} />
       <Snackbar
         open={deleteSuccess}

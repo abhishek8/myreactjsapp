@@ -78,6 +78,7 @@ function Cart(props) {
         }
       };
 
+      console.log(courseList);
       courseList.forEach((courseId) => {
         fetchCartItems(courseId);
       });

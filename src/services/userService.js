@@ -86,7 +86,7 @@ export default class UserService {
   forgotPassword = (email) => {
     return axios
       .get(
-        `${Server.BASE_API_URL}/forgot-password?email=${email}&redirectUrl=${AppDefault.BASE_PATH}/login/password-reset`
+        `${Server.BASE_API_URL}/forgot-password?email=${email}&redirectUrl=${AppDefault.BASE_PATH}/password-reset`
       )
       .then((res) => {
         return res.data;

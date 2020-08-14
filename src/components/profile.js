@@ -6,6 +6,8 @@ import EmailRoundedIcon from "@material-ui/icons/EmailRounded";
 import VerifiedUserIcon from "@material-ui/icons/VerifiedUser";
 import AccountBalanceIcon from "@material-ui/icons/AccountBalance";
 import UserService from "../services/userService";
+import CourseService from "../services/courseService";
+import CoursePreview from "./shared/CoursePreview";
 
 function Profile(props) {
   const [profileInfo, setProfileInfo] = useState({
@@ -15,6 +17,21 @@ function Profile(props) {
     email: "",
     balance: 0,
   });
+  const [watched, setWatched] = useState([]);
+
+  const getCourseList = async (courseIds) => {
+    const service = new CourseService();
+    let courseList = [];
+
+    if (courseIds && courseIds.length > 0) {
+      for (let i = 0; i < courseIds.length; i++) {
+        let response = await service.getCourseById(courseIds[i]);
+        if (response) courseList.push(response);
+      }
+    }
+
+    return courseList;
+  };
 
   useEffect(() => {
     const service = new UserService();
@@ -28,6 +45,11 @@ function Profile(props) {
           role: AppUtils.capitalize(userData.role),
           balance: userData.creditBalance,
         });
+        if (userData.role === "user" && userData.history) {
+          getCourseList(userData.history["watched"]).then((res) =>
+            setWatched(res)
+          );
+        }
       }
     });
     console.log("UseEffect - Profile");
@@ -57,6 +79,26 @@ function Profile(props) {
           )}
         </Grid>
       </Grid>
+      <br />
+      <br />
+      {watched && watched.length > 0 && (
+        <>
+          <Typography variant="h6" component="h4">
+            Watched
+          </Typography>
+          <br />
+          <Grid container spacing={4}>
+            {watched.map((course) => (
+              <CoursePreview
+                key={course._id}
+                course={course}
+                handleClick={() => props.history.push(`/video/${course._id}`)}
+                purchased={true}
+              />
+            ))}
+          </Grid>
+        </>
+      )}
     </div>
   );
 }

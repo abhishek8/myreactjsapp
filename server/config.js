@@ -13,6 +13,6 @@ module.exports.AppDefaults = {
 };
 
 module.exports.Mailer = {
-  MAILGUN_USER: "",
-  MAILGUN_PASSWORD: "",
+  MAILGUN_USER: "__gitignore__",
+  MAILGUN_PASSWORD: "__gitignore__",
 };

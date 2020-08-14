@@ -28,7 +28,8 @@ export default class CourseService {
       })
       .then((res) => {
         return res.data.data;
-      });
+      })
+      .catch((err) => console.log(err.response));
   };
 
   getCourseForTrainer = () => {

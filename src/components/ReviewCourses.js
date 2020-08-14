@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import CourseService from "../services/courseService";
 import ReviewPreview from "./shared/ReviewPreview";
 
-import { Typography, Grid, Snackbar } from "@material-ui/core";
+import { Typography, Grid, Snackbar, TablePagination } from "@material-ui/core";
 import Alert from "@material-ui/lab/Alert";
 import Loading from "./shared/Loading";
 
@@ -10,6 +10,8 @@ function ReviewCourses(props) {
   const [courses, setCourses] = useState([]);
   const [rejectedCourses, setRejectedCourses] = useState([]);
   const [approvedCourses, setApprovedCourses] = useState([]);
+
+  const [approvedPage, setApprovedPage] = useState(0);
 
   const [loading, setLoading] = useState(false);
   const [reviewSuccess, setreviewSuccess] = useState(false);
@@ -113,15 +115,30 @@ function ReviewCourses(props) {
           </Typography>
           <br />
           <Grid container spacing={3}>
-            {approvedCourses.map((course) => (
-              <ReviewPreview
-                key={course._id}
-                course={course}
-                verifyCourse={verifyCourse}
-                {...props}
-              />
-            ))}
+            {approvedCourses
+              .slice(
+                approvedPage * 4,
+                approvedPage * 4 + 4 > approvedCourses.length
+                  ? approvedCourses.length
+                  : approvedPage * 4 + 4
+              )
+              .map((course) => (
+                <ReviewPreview
+                  key={course._id}
+                  course={course}
+                  verifyCourse={verifyCourse}
+                  {...props}
+                />
+              ))}
           </Grid>
+          <TablePagination
+            component="div"
+            count={approvedCourses.length}
+            page={approvedPage}
+            rowsPerPage={4}
+            rowsPerPageOptions={[4]}
+            onChangePage={(e, page) => setApprovedPage(page)}
+          ></TablePagination>
         </>
       )}
 

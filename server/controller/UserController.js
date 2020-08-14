@@ -110,7 +110,7 @@ const forgotPassword = async (req, res) => {
       .then(() => {
         const basePath = redirectUrl
           ? redirectUrl
-          : "http://localhost:3100/api/verify-user";
+          : "http://localhost:3100/api/reset-password";
         const passwordResetLink = `${basePath}?username=${user.email}&token=${user.passwordResetToken}`;
         const sub = "Password Reset - CourseApp";
         const html = `Hi there,

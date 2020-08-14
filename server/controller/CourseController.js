@@ -32,6 +32,24 @@ const getCourses = async (req, res) => {
   }).catch((err) => console.log(err));
 };
 
+const getCoursesByList = async (req, res) => {
+  const courseList = req.body.courseIds;
+  Course.find({ _id: { $in: courseList } }, async (err, courses) => {
+    if (err) {
+      return res.status(400).json({ success: false, error: err });
+    }
+    if (!courses.length) {
+      return res.status(200).json({ success: false, error: `No course found` });
+    }
+
+    const data = await Promise.all(
+      courses.map((course) => serializedCourse(course))
+    );
+
+    return res.status(200).json({ success: true, data: data });
+  }).catch((err) => console.log(err));
+};
+
 const getCoursesByAuthor = async (req, res) => {
   await Course.find({ authorId: req.user._id }, async (err, courses) => {
     if (err) {
@@ -73,6 +91,7 @@ const getUserPurchasedCourses = async (req, res) => {
 };
 
 const getCourseDetails = async (req, res) => {
+  console.log(req.params.id);
   Course.findOne({ _id: req.params.id }, async (err, course) => {
     if (err) {
       return res.status(400).json({ success: false, error: err });
@@ -433,6 +452,7 @@ const deleteCourse = async (req, res) => {
 
 module.exports = {
   getCourses,
+  getCoursesByList,
   getCoursesByAuthor,
   getUserPurchasedCourses,
   getCourseDetails,
