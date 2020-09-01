@@ -109,6 +109,128 @@ const courseTransaction = async (req, res) => {
     });
 };
 
+const updateCourseRatings = async (req, res) => {
+  const body = req.body;
+  const userId = req.user._id;
+
+  Rating.findOne({ courseId: body.courseId }, (err, rating) => {
+    if (err) {
+      return res.status(400).json({ success: false, error: err });
+    }
+
+    if (!rating) {
+      rating = new Rating({ courseId: body.courseId });
+      rating.fiveStar = rating.fourStar = rating.threeStar = rating.twoStar = rating.oneStar = [];
+    }
+
+    rating.fiveStar.splice(rating.fiveStar.indexOf(userId), 1);
+    rating.fourStar.splice(rating.fourStar.indexOf(userId), 1);
+    rating.threeStar.splice(rating.threeStar.indexOf(userId), 1);
+    rating.twoStar.splice(rating.twoStar.indexOf(userId), 1);
+    rating.oneStar.splice(rating.oneStar.indexOf(userId), 1);
+
+    switch (body.rating_value) {
+      case 5:
+        rating.fiveStar.push(userId);
+        break;
+      case 4:
+        rating.fourStar.push(userId);
+        break;
+      case 3:
+        rating.threeStar.push(userId);
+        break;
+      case 2:
+        rating.twoStar.push(userId);
+        break;
+      case 1:
+        rating.oneStar.push(userId);
+        break;
+      default:
+        return res.status(400).json({
+          success: false,
+          message: "Invalid rating value!",
+        });
+    }
+
+    rating
+      .save()
+      .then(async () => {
+        const course = await Course.findOne({ _id: body.courseId });
+        var user = new User(req.user);
+        user.creditBalance = user.creditBalance + course.credits.score;
+        user
+          .save()
+          .then(() => {
+            return res.status(200).json({
+              success: true,
+              id: rating._id,
+              message:
+                "Course rated successfully! Credits points added to user.",
+            });
+          })
+          .catch((error) => {
+            console.log(error);
+            return res.status(500).json({
+              error,
+              message: "Course has been rated but credit could not be awarded.",
+            });
+          });
+      })
+      .catch((error) => {
+        return res.status(404).json({
+          error,
+          message: "Unable to provide your rating!",
+        });
+      });
+  });
+};
+
+const setCourseWatched = (req, res) => {
+  Course.findOne({ _id: req.params.id }, (err, course) => {
+    if (err) {
+      return res.status(400).json({ success: false, error: err });
+    }
+
+    if (!course) {
+      return res.status(404).json({
+        success: false,
+        error: `Course with ${req.params.id} not found`,
+      });
+    }
+
+    const alreadyWatched =
+      req.user.history &&
+      req.user.history.watched &&
+      req.user.history.watched.includes(course._id);
+
+    if (alreadyWatched) {
+      return res.status(400).json({
+        success: false,
+        error: `Course with ${req.params.id} already watched`,
+      });
+    }
+
+    var user = new User(req.user);
+    user.history.watched = [...user.history.watched, course._id];
+    user
+      .save()
+      .then(() => {
+        return res.status(200).json({
+          success: true,
+          id: user._id,
+          message: "User history updated.",
+        });
+      })
+      .catch((error) => {
+        console.log(error);
+        return res.status(500).json({
+          error,
+          message: "Unable to update user-info!",
+        });
+      });
+  });
+};
+
 const getUserRatingOnCourse = async (req, res) => {
   Rating.findOne({ courseId: req.params.id }, (err, rating) => {
     if (err) {
@@ -137,5 +259,7 @@ const getUserRatingOnCourse = async (req, res) => {
 module.exports = {
   getCategories,
   getUserRatingOnCourse,
+  updateCourseRatings,
+  setCourseWatched,
   courseTransaction,
 };

@@ -6,17 +6,14 @@ import { GoogleReCaptcha as ReCaptchaSettings } from "../../config";
 import {
   Box,
   Button,
-  Select,
-  FormControl,
-  InputLabel,
   MenuItem,
-  TextareaAutosize,
   TextField,
   FormControlLabel,
   Checkbox,
   Fab,
 } from "@material-ui/core";
 import AddCircleSharpIcon from "@material-ui/icons/AddCircleSharp";
+import CKEditor from "react-ckeditor-component";
 
 const renderErrorMessage = (name) => {
   return (
@@ -28,6 +25,7 @@ const renderErrorMessage = (name) => {
 
 function FormikControl(props) {
   const { control, label, name, options, ...rest } = props;
+
   switch (control) {
     case "input":
       return (
@@ -45,24 +43,23 @@ function FormikControl(props) {
     case "textarea":
       return (
         <Box margin={1}>
-          <FormControl variant="outlined">
-            <InputLabel htmlFor={name}>{label}</InputLabel>
-            <TextareaAutosize
-              name={name}
-              label={label}
-              placeholder={`Enter ${label}`}
-              rowsMin={rest.minRow ? rest.minRow : 3}
-              rowsMax={rest.maxRow ? rest.maxRow : 6}
-              fullWidth={true}
-            />
-          </FormControl>
-          {renderErrorMessage(name)}
+          <TextField
+            variant="outlined"
+            name={name}
+            label={label}
+            helperText={renderErrorMessage(name)}
+            fullWidth={true}
+            multiline={true}
+            rows={5}
+            placeholder={`Enter ${label}`}
+            {...rest}
+          />
         </Box>
       );
     case "select":
       return (
         <Box margin={1}>
-          <FormControl
+          {/* <FormControl
             variant="outlined"
             margin="dense"
             style={{ width: "100%" }}
@@ -79,7 +76,25 @@ function FormikControl(props) {
               ))}
             </Select>
             {renderErrorMessage(name)}
-          </FormControl>
+          </FormControl> */}
+          <TextField
+            variant="outlined"
+            name={name}
+            label={label}
+            helperText={renderErrorMessage(name)}
+            fullWidth={true}
+            select={true}
+            {...rest}
+          >
+            <MenuItem value="">
+              <em>Select</em>
+            </MenuItem>
+            {options.map((val) => (
+              <MenuItem value={val.key} key={val.key}>
+                {val.value}
+              </MenuItem>
+            ))}
+          </TextField>
         </Box>
       );
     case "file":
@@ -87,7 +102,6 @@ function FormikControl(props) {
         <label htmlFor={name}>
           <input
             style={{ display: "none" }}
-            id={name}
             name={name}
             type="file"
             {...rest}
@@ -129,6 +143,18 @@ function FormikControl(props) {
           <br />
           {renderErrorMessage(name)}
         </>
+      );
+    case "richText":
+      return (
+        <Box margin={2}>
+          <CKEditor
+            name={name}
+            placeholder={`Enter ${label}`}
+            activeClass="editor"
+            {...rest}
+          />
+          {renderErrorMessage(name)}
+        </Box>
       );
     case "submit":
       return (

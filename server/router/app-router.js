@@ -3,6 +3,7 @@ const express = require("express");
 const UserCtrl = require("../controller/UserController");
 const CourseCtrl = require("../controller/CourseController");
 const MiscCtrl = require("../controller/MiscController");
+const ResourceCtrl = require("../controller/ResourceController");
 
 const router = express.Router();
 
@@ -99,6 +100,13 @@ router.post(
   CourseCtrl.createCourse
 );
 
+router.put(
+  "/course/submit/:id",
+  UserCtrl.userAuth,
+  UserCtrl.checkRole(["trainer"]),
+  CourseCtrl.submitCourseForReview
+);
+
 router.post(
   "/course/verify",
   UserCtrl.userAuth,
@@ -117,7 +125,7 @@ router.put(
   "/course-ratings/",
   UserCtrl.userAuth,
   UserCtrl.checkRole(["user", "trainer"]),
-  CourseCtrl.updateCourseRatings
+  MiscCtrl.updateCourseRatings
 );
 
 router.delete(
@@ -127,12 +135,26 @@ router.delete(
   CourseCtrl.deleteCourse
 );
 
+router.post(
+  "/course/deactivate/:id",
+  UserCtrl.userAuth,
+  UserCtrl.checkRole(["trainer"]),
+  CourseCtrl.deactivateCourse
+);
+
 // Purchase Course
 router.post(
   "/course/transact/",
   UserCtrl.userAuth,
   UserCtrl.checkRole(["user"]),
   MiscCtrl.courseTransaction
+);
+
+router.post(
+  "/course/watched/:id",
+  UserCtrl.userAuth,
+  UserCtrl.checkRole(["user"]),
+  MiscCtrl.setCourseWatched
 );
 
 // Get User Rating on Course
@@ -145,5 +167,11 @@ router.get(
 
 // Get All Category Names
 router.get("/categories", MiscCtrl.getCategories);
+
+// Upload Images
+router.post("/upload/image", ResourceCtrl.uploadCourseImage);
+
+// Upload Documents
+router.post("/upload/docs", ResourceCtrl.uploadHTMLContent);
 
 module.exports = router;

@@ -117,29 +117,53 @@ function NavigationBar(props) {
     } else {
       if (checkRole("trainer")) {
         return (
-          <ListItem>
-            <Button
-              color="secondary"
-              onClick={() => history.push("/course/my-course")}
-              disableRipple
-              disableElevation
-            >
-              My Courses
-            </Button>
-          </ListItem>
+          <>
+            <ListItem>
+              <Button
+                color="secondary"
+                onClick={() => history.push("/course/manage")}
+                disableRipple
+                disableElevation
+              >
+                Manage
+              </Button>
+            </ListItem>
+            <ListItem>
+              <Button
+                color="secondary"
+                onClick={() => history.push("/course/my-course")}
+                disableRipple
+                disableElevation
+              >
+                My Courses
+              </Button>
+            </ListItem>
+          </>
         );
       } else if (checkRole("reviewer")) {
         return (
-          <ListItem>
-            <Button
-              color="secondary"
-              onClick={() => history.push("/course/review")}
-              disableRipple
-              disableElevation
-            >
-              Review
-            </Button>
-          </ListItem>
+          <>
+            <ListItem>
+              <Button
+                color="secondary"
+                onClick={() => history.push("/course/pending")}
+                disableRipple
+                disableElevation
+              >
+                Pending
+              </Button>
+            </ListItem>
+            <ListItem>
+              <Button
+                color="secondary"
+                onClick={() => history.push("/course/review")}
+                disableRipple
+                disableElevation
+              >
+                Reviewed
+              </Button>
+            </ListItem>
+          </>
         );
       } else if (checkRole("user")) {
         return (
@@ -322,24 +346,44 @@ function NavigationBar(props) {
                           </div>
                         )}
                         {checkRole("trainer") && (
-                          <MenuItem
-                            onClick={() => {
-                              history.push("/course/my-course");
-                              setAnchorEl(null);
-                            }}
-                          >
-                            My Courses
-                          </MenuItem>
+                          <div>
+                            <MenuItem
+                              onClick={() => {
+                                history.push("/course/manage");
+                                setAnchorEl(null);
+                              }}
+                            >
+                              Manage
+                            </MenuItem>
+                            <MenuItem
+                              onClick={() => {
+                                history.push("/course/my-course");
+                                setAnchorEl(null);
+                              }}
+                            >
+                              My Courses
+                            </MenuItem>
+                          </div>
                         )}
                         {checkRole("reviewer") && (
-                          <MenuItem
-                            onClick={() => {
-                              history.push("/course/review");
-                              setAnchorEl(null);
-                            }}
-                          >
-                            Review
-                          </MenuItem>
+                          <div>
+                            <MenuItem
+                              onClick={() => {
+                                history.push("/course/pending");
+                                setAnchorEl(null);
+                              }}
+                            >
+                              Pending
+                            </MenuItem>
+                            <MenuItem
+                              onClick={() => {
+                                history.push("/course/review");
+                                setAnchorEl(null);
+                              }}
+                            >
+                              Reviewed
+                            </MenuItem>
+                          </div>
                         )}
                         <MenuItem
                           onClick={() => {

@@ -1,13 +1,30 @@
 import React, { useState, useEffect } from "react";
 import AppUtils from "../utilities/AppUtils";
 import { AppDefault } from "../config";
-import { Grid, Typography } from "@material-ui/core";
+import {
+  Grid,
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
+  Avatar,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Snackbar,
+} from "@material-ui/core";
 import EmailRoundedIcon from "@material-ui/icons/EmailRounded";
 import VerifiedUserIcon from "@material-ui/icons/VerifiedUser";
 import AccountBalanceIcon from "@material-ui/icons/AccountBalance";
+import Alert from "@material-ui/lab/Alert";
 import UserService from "../services/userService";
 import CourseService from "../services/courseService";
-import CoursePreview from "./shared/CoursePreview";
+//import CoursePreview from "./shared/CoursePreview";
+import BackButton from "./shared/BackButton";
+import Rating from "@material-ui/lab/Rating";
 
 function Profile(props) {
   const [profileInfo, setProfileInfo] = useState({
@@ -19,6 +36,12 @@ function Profile(props) {
   });
   const [watched, setWatched] = useState([]);
 
+  const [pickCourse, setPickCourse] = useState(null);
+  const [rating, setRating] = useState(5);
+  const [askRating, setAskRating] = useState(false);
+  const [ratingSuccess, setRatingSuccess] = useState(false);
+  const [ratingFailure, setRatingFailure] = useState(false);
+
   const getCourseList = async (courseIds) => {
     const service = new CourseService();
     let courseList = [];
@@ -26,10 +49,17 @@ function Profile(props) {
     if (courseIds && courseIds.length > 0) {
       for (let i = 0; i < courseIds.length; i++) {
         let response = await service.getCourseById(courseIds[i]);
-        if (response) courseList.push(response);
+        console.log(response);
+        if (response) {
+          let rateRes = await service.getUserRating(courseIds[i]);
+          console.log("Rate", rateRes);
+          rateRes = rateRes ? rateRes : 0;
+          response["rating"] = rateRes;
+          courseList.push(response);
+        }
       }
     }
-
+    console.log(courseList);
     return courseList;
   };
 
@@ -55,9 +85,31 @@ function Profile(props) {
     console.log("UseEffect - Profile");
   }, []);
 
+  const handleRating = (courseId) => {
+    setAskRating(true);
+    setPickCourse(courseId);
+  };
+
+  const postRating = () => {
+    let service = new CourseService();
+    const data = {
+      courseId: pickCourse,
+      rating_value: rating,
+    };
+    service
+      .postRating(data)
+      .then((res) => {
+        if (res.success) setRatingSuccess(true);
+        else setRatingFailure(true);
+      })
+      .catch((err) => setRatingFailure(true));
+    setAskRating(false);
+  };
+
   return (
     <div className="">
-      <h1>&nbsp;</h1>
+      <BackButton />
+      <br />
       <Grid container>
         <Grid item>
           <img src={profileInfo.profileImg} alt="" height="150" width="150" />
@@ -88,15 +140,88 @@ function Profile(props) {
           </Typography>
           <br />
           <Grid container spacing={4}>
-            {watched.map((course) => (
-              <CoursePreview
-                key={course._id}
-                course={course}
-                handleClick={() => props.history.push(`/video/${course._id}`)}
-                purchased={true}
-              />
-            ))}
+            <Grid item xs={12} sm={12} md={9}>
+              {watched && watched.length > 0 && (
+                <List>
+                  {watched.map((course) => (
+                    <ListItem key={course._id}>
+                      <Avatar
+                        src={course.thumbnail}
+                        size="large"
+                        style={{ margin: "16px" }}
+                      />
+                      <ListItemText
+                        primary={course.title}
+                        secondary={
+                          course.author.name ? course.author.name : null
+                        }
+                      />
+                      {(!course.rating || course.rating === 0) && (
+                        <Button
+                          type="button"
+                          variant="contained"
+                          color="default"
+                          onClick={(e) => handleRating(course._id)}
+                        >
+                          Provied Rating
+                        </Button>
+                      )}
+                      {course.rating > 0 && (
+                        <Rating
+                          name="rating"
+                          value={course.rating}
+                          size="medium"
+                          min={1}
+                          max={5}
+                          readOnly
+                        />
+                      )}
+                    </ListItem>
+                  ))}
+                </List>
+              )}
+            </Grid>
           </Grid>
+          <Dialog open={askRating} onClose={() => setAskRating(false)}>
+            <DialogTitle>Please provide your rating</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                This is necessary to gain credits if any offered in this course
+              </DialogContentText>
+              <Rating
+                name="courseRating"
+                value={rating}
+                onChange={(e) => setRating(Number(e.target.value))}
+                size="medium"
+                min={1}
+                max={5}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={postRating} color="primary" autoFocus>
+                Submit
+              </Button>
+            </DialogActions>
+          </Dialog>
+          <Snackbar
+            open={ratingSuccess}
+            autoHideDuration={6000}
+            onClose={() => setRatingSuccess(false)}
+          >
+            <Alert severity="success">
+              Successfully submitted your rating. You will recieve credit in
+              your account if course had offered.
+            </Alert>
+          </Snackbar>
+          <Snackbar
+            open={ratingFailure}
+            autoHideDuration={6000}
+            onClose={() => setRatingFailure(false)}
+          >
+            <Alert severity="error">
+              Failed to submit your rating. Please try again!
+            </Alert>
+          </Snackbar>
         </>
       )}
     </div>

@@ -1,8 +1,9 @@
 import axios from "axios";
+import AppUtils from "../utilities/AppUtils";
 import { Server, AppDefault } from "../config";
 
 export default class UserService {
-  accessToken = sessionStorage.getItem("auth_cookie");
+  accessToken = AppUtils.getLocalItem("auth_cookie");
 
   registerUser = async (userData) => {
     let registerUrl;
@@ -109,5 +110,6 @@ export default class UserService {
 
   logoutUser = () => {
     sessionStorage.clear();
+    localStorage.clear();
   };
 }

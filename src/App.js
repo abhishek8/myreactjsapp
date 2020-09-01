@@ -12,6 +12,7 @@ import { GoogleReCaptcha } from "./config";
 import Loading from "./components/shared/Loading";
 import { UserContext, UserReducer } from "./context/UserContext";
 import { CartContext, CartReducer } from "./context/CartContext";
+import AppUtils from "./utilities/AppUtils";
 
 const Home = lazy(() => import("./components/Home"));
 const Login = lazy(() => import("./components/Login"));
@@ -29,6 +30,10 @@ const PasswordReset = lazy(() => import("./components/shared/PasswordReset"));
 const ChooseLogin = lazy(() => import("./components/ChooseLogin"));
 const ChooseRegister = lazy(() => import("./components/ChooseRegister"));
 const CreateCourse = lazy(() => import("./components/CreateCourse"));
+const AddCourse = lazy(() => import("./components/AddCourse"));
+const CourseContent = lazy(() => import("./components/CourseContent"));
+const ManageCourse = lazy(() => import("./components/ManageCourse"));
+const PendingCourse = lazy(() => import("./components/PendingCourse"));
 
 const theme = createMuiTheme({
   palette: {
@@ -44,12 +49,11 @@ const theme = createMuiTheme({
 function App() {
   const cartStorage = sessionStorage.getItem("app_cart");
   const localCart = cartStorage ? JSON.parse(cartStorage) : [];
-  const userLocalInfo = JSON.parse(sessionStorage.getItem("user_info"));
-  const authToken = sessionStorage.getItem("auth_cookie");
+  const authToken = AppUtils.getLocalItem("auth_cookie");
 
   const [user, userDispatch] = useReducer(UserReducer, {
     isAuthenticated: authToken && authToken.length > 0,
-    user: userLocalInfo,
+    user: JSON.parse(AppUtils.getLocalItem("user_info")),
     token: authToken,
   });
   const [cart, cartDispatch] = useReducer(CartReducer, [...localCart]);
@@ -94,20 +98,36 @@ function App() {
                     component={requireAuth(Video)}
                   />
                   <DefaultRoute
-                    path="/course/edit/:id?"
+                    path="/course/edit/:id"
                     component={requireAuth(CourseForm, ["trainer"])}
+                  />
+                  <DefaultRoute
+                    path="/course/content/:id"
+                    component={requireAuth(CourseContent, ["trainer"])}
                   />
                   <DefaultRoute
                     path="/course/new"
                     component={requireAuth(CreateCourse, ["trainer"])}
                   />
                   <DefaultRoute
+                    path="/course/add"
+                    component={requireAuth(AddCourse, ["trainer"])}
+                  />
+                  <DefaultRoute
                     path="/course/my-course"
                     component={requireAuth(MyCourse, ["trainer"])}
                   />
                   <DefaultRoute
+                    path="/course/manage"
+                    component={requireAuth(ManageCourse, ["trainer"])}
+                  />
+                  <DefaultRoute
                     path="/course/subscription"
                     component={requireAuth(UserSubscription, ["user"])}
+                  />
+                  <DefaultRoute
+                    path="/course/pending"
+                    component={requireAuth(PendingCourse, ["reviewer"])}
                   />
                   <DefaultRoute
                     path="/course/review"

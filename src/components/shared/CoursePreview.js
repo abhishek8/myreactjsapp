@@ -23,14 +23,12 @@ const useStyles = makeStyles((theme) => ({
     height: "100%",
     display: "flex",
     flexDirection: "column",
+    "&:hover": {
+      cursor: "pointer",
+    },
   },
   cardMedia: {
     paddingTop: "60%",
-    "&:hover": {
-      cursor: "pointer",
-      backgroundColor: "#000",
-      opacity: 0.2,
-    },
   },
   cardContent: {
     flexGrow: 1,

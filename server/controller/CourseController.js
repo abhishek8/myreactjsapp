@@ -8,33 +8,12 @@ const unlinkAsync = promisify(fs.unlink);
 const { AppDefaults } = require("../config");
 
 const getCourses = async (req, res) => {
-  const { genre, verified } = url.parse(req.url, true).query;
+  const { genre, status } = url.parse(req.url, true).query;
   var query = {};
   if (genre) query["genre"] = genre;
-  query["verification.status"] = verified ? verified : true;
-  // Search by credits
-  // Search by ratings
-  // Pagination, sorting and offsets
+  query["status"] = status ? status : "ACTIVE";
 
   await Course.find(query, async (err, courses) => {
-    if (err) {
-      return res.status(400).json({ success: false, error: err });
-    }
-    if (!courses.length) {
-      return res.status(200).json({ success: false, error: `No course found` });
-    }
-
-    const data = await Promise.all(
-      courses.map((course) => serializedCourse(course))
-    );
-
-    return res.status(200).json({ success: true, data: data });
-  }).catch((err) => console.log(err));
-};
-
-const getCoursesByList = async (req, res) => {
-  const courseList = req.body.courseIds;
-  Course.find({ _id: { $in: courseList } }, async (err, courses) => {
     if (err) {
       return res.status(400).json({ success: false, error: err });
     }
@@ -91,7 +70,6 @@ const getUserPurchasedCourses = async (req, res) => {
 };
 
 const getCourseDetails = async (req, res) => {
-  console.log(req.params.id);
   Course.findOne({ _id: req.params.id }, async (err, course) => {
     if (err) {
       return res.status(400).json({ success: false, error: err });
@@ -104,13 +82,6 @@ const getCourseDetails = async (req, res) => {
       });
     }
 
-    if (!course.verification.status && req.user.role === "user") {
-      return res.status(400).json({
-        success: false,
-        error: `Course has not been verified yet`,
-      });
-    }
-
     if (req.user.role === "trainer" && course.authorId != req.user._id) {
       return res.status(401).json({
         success: false,
@@ -119,6 +90,7 @@ const getCourseDetails = async (req, res) => {
     }
 
     var data = await serializedCourse(course);
+    data["description"] = course.description;
 
     return res.status(200).json({ success: true, data: data });
   }).catch((err) => console.log(err));
@@ -127,7 +99,7 @@ const getCourseDetails = async (req, res) => {
 const getUnverifiedCourses = async (req, res) => {
   Course.find(
     {
-      publishedDate: { $exists: false },
+      status: "COMPLETED",
     },
     async (err, courses) => {
       if (err) {
@@ -144,10 +116,8 @@ const getUnverifiedCourses = async (req, res) => {
 };
 
 const getReviewedCourses = async (req, res) => {
-  const { status } = url.parse(req.url, true).query;
   Course.find(
     {
-      "verification.status": status,
       "verification.verificationId": req.user._id.toString(),
     },
     async (err, courses) => {
@@ -214,6 +184,8 @@ const serializedCourse = async (course) => {
       name: author.name,
       email: author.email,
     },
+    status: course.status,
+    section: course.section,
   };
 
   return data;
@@ -231,7 +203,7 @@ const createCourse = (req, res) => {
 
   const course = new Course(body);
   course.authorId = req.user._id;
-
+  course.status = "CREATED";
   if (!course) {
     return res
       .status(400)
@@ -259,7 +231,8 @@ const verifyCourse = (req, res) => {
   const body = req.body;
 
   Course.findOne({ _id: body.courseId }, (err, course) => {
-    course.verification["status"] = body.status;
+    course.verification["status"] = true;
+    course.status = body.status ? "ACTIVE" : "REJECTED";
     course.verification["verificationId"] = req.user._id;
     course.publishedDate = new Date();
 
@@ -287,97 +260,112 @@ const verifyCourse = (req, res) => {
   });
 };
 
-const updateCourseRatings = async (req, res) => {
+const updateCourseDetails = async (req, res) => {
   const body = req.body;
-  const userId = req.user._id;
 
-  Rating.findOne({ courseId: body.courseId }, (err, rating) => {
-    if (err) {
-      return res.status(400).json({ success: false, error: err });
-    }
+  if (!body) {
+    return res.status(400).json({
+      success: false,
+      error: "You must provide information to update",
+    });
+  }
 
-    if (!rating) {
-      rating = new Rating({ courseId: body.courseId });
-      rating.fiveStar = rating.fourStar = rating.threeStar = rating.twoStar = rating.oneStar = [];
-    }
+  Course.findOne(
+    { _id: req.params.id, authorId: req.user._id },
+    (err, course) => {
+      if (err) {
+        return res.status(404).json({
+          err,
+          message: "Course not found!",
+        });
+      }
 
-    rating.fiveStar.splice(rating.fiveStar.indexOf(userId), 1);
-    rating.fourStar.splice(rating.fourStar.indexOf(userId), 1);
-    rating.threeStar.splice(rating.threeStar.indexOf(userId), 1);
-    rating.twoStar.splice(rating.twoStar.indexOf(userId), 1);
-    rating.oneStar.splice(rating.oneStar.indexOf(userId), 1);
-
-    switch (body.rating_value) {
-      case 5:
-        rating.fiveStar.push(userId);
-        break;
-      case 4:
-        rating.fourStar.push(userId);
-        break;
-      case 3:
-        rating.threeStar.push(userId);
-        break;
-      case 2:
-        rating.twoStar.push(userId);
-        break;
-      case 1:
-        rating.oneStar.push(userId);
-        break;
-      default:
+      if (course.status === "COMPLETED") {
         return res.status(400).json({
           success: false,
-          message: "Invalid rating value!",
+          message: "Course submitted for review cannot be updated.",
         });
-    }
+      }
 
-    rating
-      .save()
-      .then(async () => {
-        const alreadyRated =
-          req.user.history &&
-          req.user.history.watched &&
-          req.user.history.watched.includes(body.courseId);
-        if (!alreadyRated) {
-          const course = await Course.findOne({ _id: body.courseId });
-          var user = new User(req.user);
-          user.creditBalance = user.creditBalance + course.credits.score;
-          user.history.watched = [...user.history.watched, course._id];
-          user
-            .save()
-            .then(() => {
-              return res.status(200).json({
-                success: true,
-                id: rating._id,
-                message:
-                  "Course rated successfully! Credits points added to user.",
-              });
-            })
-            .catch((error) => {
-              console.log(error);
-              return res.status(500).json({
-                error,
-                message:
-                  "Course has been rated but credit could not be awarded.",
-              });
-            });
-        } else {
+      if (body.title) course.title = body.title;
+      if (body.genre) course.genre = body.genre;
+      if (body.courseLink) course.courseLink = body.courseLink;
+      if (body.credits && body.credits.criteria)
+        course.credits["criteria"] = body.credits["criteria"];
+      if (body.credits && body.credits.score)
+        course.credits["score"] = body.credits["score"];
+      if (body.thumbnail) course.thumbnail = body.thumbnail;
+      if (body.section) course.section = body.section;
+      if (course.status !== "CREATED") course.status = "COMPLETED";
+
+      course
+        .save()
+        .then(() => {
           return res.status(200).json({
             success: true,
-            id: rating._id,
-            message: "Course rated successfully!",
+            id: course._id,
+            message: "Course updated!",
           });
-        }
-      })
-      .catch((error) => {
-        return res.status(404).json({
-          error,
-          message: "Unable to provide your rating!",
+        })
+        .catch((error) => {
+          return res.status(404).json({
+            error,
+            message: "Course not updated!",
+          });
         });
-      });
-  });
+    }
+  );
 };
 
-const updateCourseDetails = async (req, res) => {
+const deactivateCourse = async (req, res) => {
+  const body = req.body;
+
+  if (!body) {
+    return res.status(400).json({
+      success: false,
+      error: "You must provide information to update",
+    });
+  }
+
+  Course.findOne(
+    { _id: req.params.id, authorId: req.user._id },
+    (err, course) => {
+      if (err) {
+        return res.status(404).json({
+          err,
+          message: "Course not found!",
+        });
+      }
+
+      if (course.status !== "ACTIVE") {
+        return res.status(400).json({
+          err,
+          message: "Course is not active!",
+        });
+      }
+
+      course.status = "DEACTIVATED";
+
+      course
+        .save()
+        .then(() => {
+          return res.status(200).json({
+            success: true,
+            id: course._id,
+            message: "Course Deactivated!",
+          });
+        })
+        .catch((error) => {
+          return res.status(500).json({
+            error,
+            message: "Unable to deactivate! Please try again.",
+          });
+        });
+    }
+  );
+};
+
+const submitCourseForReview = async (req, res) => {
   const body = req.body;
 
   if (!body) {
@@ -405,6 +393,8 @@ const updateCourseDetails = async (req, res) => {
       if (body.credits && body.credits.score)
         course.credits["score"] = body.credits["score"];
       if (body.thumbnail) course.thumbnail = body.thumbnail;
+      if (body.section) course.section = body.section;
+      course.status = "COMPLETED";
 
       course
         .save()
@@ -425,25 +415,43 @@ const updateCourseDetails = async (req, res) => {
   );
 };
 
+const removeFiles = async (path) => {
+  try {
+    if (path && path.startsWith(AppDefaults.BASE_PATH))
+      await unlinkAsync(
+        "../server/" + course.courseLink.replace(AppDefaults.BASE_PATH, "")
+      );
+    return true;
+  } catch (error) {
+    console.log(error);
+  }
+  return false;
+};
+
 const deleteCourse = async (req, res) => {
   Course.findOneAndDelete(
-    { _id: req.params.id, authorId: req.user._id },
+    {
+      _id: req.params.id,
+      authorId: req.user._id,
+      status: { $in: ["CREATED", "COMPLETED"] },
+    },
     async (err, course) => {
       if (err) {
         return res.status(400).json({ success: false, error: err });
       }
-
       if (!course) {
         return res.status(404).json({
           success: false,
-          error: `Either course doesn't exists or you are not authorized to delete this course.`,
+          error: `Either course doesn't exists or you are not authorized to delete this course. Note published courses could only be deactivated and will not be deleted.`,
         });
       }
-
-      if (course.courseLink.startsWith(AppDefaults.BASE_PATH))
-        await unlinkAsync(
-          "../server/" + course.courseLink.replace(AppDefaults.BASE_PATH, "")
-        );
+      course.section.forEach((sect) => {
+        sect.contentList.forEach((content) => {
+          removeFiles(content.sourceLinks.videosrc);
+          removeFiles(content.sourceLinks.thumbnail);
+          removeFiles(content.sourceLinks.contentsrc);
+        });
+      });
 
       return res.status(200).json({ success: true, data: course });
     }
@@ -452,7 +460,6 @@ const deleteCourse = async (req, res) => {
 
 module.exports = {
   getCourses,
-  getCoursesByList,
   getCoursesByAuthor,
   getUserPurchasedCourses,
   getCourseDetails,
@@ -460,7 +467,8 @@ module.exports = {
   getReviewedCourses,
   createCourse,
   verifyCourse,
-  updateCourseRatings,
   updateCourseDetails,
+  submitCourseForReview,
+  deactivateCourse,
   deleteCourse,
 };

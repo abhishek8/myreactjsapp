@@ -1,8 +1,9 @@
 import axios from "axios";
+import AppUtils from "../utilities/AppUtils";
 import { Server } from "../config";
 
 export default class CourseService {
-  accessToken = sessionStorage.getItem("auth_cookie");
+  accessToken = AppUtils.getLocalItem("auth_cookie");
 
   getAllCategories = () => {
     return axios.get(`${Server.BASE_API_URL}/categories/`).then((res) => {
@@ -60,9 +61,9 @@ export default class CourseService {
       .catch((err) => console.log(err.response));
   };
 
-  getVerifiedCoursesForReviewer = (status) => {
+  getVerifiedCoursesForReviewer = () => {
     return axios
-      .get(`${Server.BASE_API_URL}/course/verified?status=${status}`, {
+      .get(`${Server.BASE_API_URL}/course/verified`, {
         headers: {
           Authorization: this.accessToken,
         },
@@ -88,6 +89,20 @@ export default class CourseService {
       .catch((err) => console.log(err));
   };
 
+  getUserRating(courseId) {
+    return axios
+      .get(`${Server.BASE_API_URL}/course/my-rating/${courseId}`, {
+        headers: {
+          Authorization: this.accessToken,
+        },
+      })
+      .then((res) => {
+        console.log(res);
+        if (res.data.success) return res.data.data;
+      })
+      .catch((err) => console.log(err.response));
+  }
+
   addNewCourse(course) {
     return axios
       .post(`${Server.BASE_API_URL}/course`, course, {
@@ -105,6 +120,20 @@ export default class CourseService {
   updateCourse(courseId, course) {
     return axios
       .put(`${Server.BASE_API_URL}/course/${courseId}`, course, {
+        headers: {
+          Authorization: this.accessToken,
+        },
+      })
+      .then((res) => {
+        if (res.data && res.data.success) return res.data;
+        console.log(res);
+      })
+      .catch((err) => console.log(err));
+  }
+
+  submitCourse(courseId, course) {
+    return axios
+      .put(`${Server.BASE_API_URL}/course/submit/${courseId}`, course, {
         headers: {
           Authorization: this.accessToken,
         },
@@ -163,6 +192,19 @@ export default class CourseService {
       .catch((err) => console.log(err));
   }
 
+  setWatched(courseId) {
+    return axios
+      .post(`${Server.BASE_API_URL}/course/watched/${courseId}`, null, {
+        headers: {
+          Authorization: this.accessToken,
+        },
+      })
+      .then((res) => {
+        if (res.success) return res.data.data;
+      })
+      .catch((err) => console.log(err));
+  }
+
   postRating(data) {
     return axios
       .put(`${Server.BASE_API_URL}/course-ratings/`, data, {
@@ -172,6 +214,22 @@ export default class CourseService {
       })
       .then((res) => {
         if (res) return res.data;
+        console.log(res);
+      })
+      .catch((err) => console.log(err.response));
+  }
+
+  deactivateCourse(courseId) {
+    return axios
+      .post(`${Server.BASE_API_URL}/course/deactivate/${courseId}`, null, {
+        headers: {
+          Authorization: this.accessToken,
+        },
+      })
+      .then((res) => {
+        if (res.data.success === true) {
+          return res.data;
+        }
         console.log(res);
       })
       .catch((err) => console.log(err.response));

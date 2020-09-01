@@ -2,47 +2,42 @@ import React, { useState, useEffect } from "react";
 import Loading from "./shared/Loading";
 import CourseService from "../services/courseService";
 
-// import { Button } from "@material-ui/core";
-// import CreateSharpIcon from "@material-ui/icons/CreateSharp";
+import { Button } from "@material-ui/core";
+import CreateSharpIcon from "@material-ui/icons/CreateSharp";
 import InstructorCourses from "./shared/InstructorCourses";
 
-function MyCourse() {
-  // const [created, setCreatedCourses] = useState([]);
-  // const [pending, setPendingCourses] = useState([]);
-  //const [rejected, setRejectedCourses] = useState([]);
-  const [active, setActiveCourses] = useState([]);
-  const [deactive, setDeactiveCourses] = useState([]);
+function ManageCourse(props) {
+  const [created, setCreatedCourses] = useState([]);
+  const [pending, setPendingCourses] = useState([]);
+  const [rejected, setRejectedCourses] = useState([]);
 
   const [loading, setLoading] = useState(false);
 
   const loadCourses = (courses) => {
-    // const createdCourses = [];
-    // const pendingCourses = [];
-    // const rejectedCourses = [];
-    const activeCourses = [];
-    const deactiveCourses = [];
-
+    const createdCourses = [];
+    const pendingCourses = [];
+    const rejectedCourses = [];
     courses.forEach((course) => {
       switch (course.status) {
         case "CREATED":
+          createdCourses.push(course);
+          break;
         case "COMPLETED":
+          pendingCourses.push(course);
+          break;
         case "REJECTED":
+          rejectedCourses.push(course);
           break;
         case "ACTIVE":
-          activeCourses.push(course);
-          break;
         case "DEACTIVATED":
-          deactiveCourses.push(course);
           break;
         default:
           console.log(course);
       }
     });
-    // setCreatedCourses(createdCourses);
-    // setPendingCourses(pendingCourses);
-    // setRejectedCourses(rejectedCourses);
-    setActiveCourses(activeCourses);
-    setDeactiveCourses(deactiveCourses);
+    setCreatedCourses(createdCourses);
+    setPendingCourses(pendingCourses);
+    setRejectedCourses(rejectedCourses);
   };
 
   useEffect(() => {
@@ -61,7 +56,7 @@ function MyCourse() {
   return (
     <div>
       <Loading open={loading} />
-      {/* <br />
+      <br />
       <Button
         variant="contained"
         color="primary"
@@ -69,10 +64,10 @@ function MyCourse() {
       >
         <CreateSharpIcon />
         &nbsp;Create Course
-      </Button> */}
+      </Button>
       <br />
       <br />
-      {/* <InstructorCourses
+      <InstructorCourses
         courses={created}
         setCourses={setCreatedCourses}
         label="created"
@@ -86,19 +81,9 @@ function MyCourse() {
         courses={rejected}
         setCourses={setRejectedCourses}
         label="rejected"
-      /> */}
-      <InstructorCourses
-        courses={active}
-        setCourses={setActiveCourses}
-        label="active"
-      />
-      <InstructorCourses
-        courses={deactive}
-        setCourses={setDeactiveCourses}
-        label="deactive"
       />
     </div>
   );
 }
 
-export default MyCourse;
+export default ManageCourse;

@@ -59,6 +59,7 @@ const useStyles = makeStyles((theme) => ({
 function Login(props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
 
   const userService = new UserService();
   const { params } = props.match;
@@ -117,7 +118,11 @@ function Login(props) {
     setOpen(true);
     authenticateUser(email, password).then((result) => {
       if (result && result.success === true) {
-        const payload = { userInfo: result.data, token: result.data.token };
+        const payload = {
+          userInfo: result.data,
+          token: result.data.token,
+          rememberMe: remember,
+        };
         userContext.userDispatch({ type: "LOGIN", payload: payload });
         navigateAfterLogin();
       } else {
@@ -140,6 +145,7 @@ function Login(props) {
         const payload = {
           userInfo: result.data,
           token: result.data.token.toString(),
+          rememberMe: remember,
         };
         userContext.userDispatch({ type: "LOGIN", payload: payload });
         navigateAfterLogin();
@@ -202,7 +208,13 @@ function Login(props) {
           autoComplete="current-password"
         />
         <FormControlLabel
-          control={<Checkbox value="remember" color="primary" />}
+          control={
+            <Checkbox
+              checked={remember}
+              onChange={(e) => setRemember(e.target.checked)}
+              color="primary"
+            />
+          }
           label="Remember me"
         />
         <Button

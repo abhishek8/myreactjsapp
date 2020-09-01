@@ -20,12 +20,16 @@ import {
   Dialog,
   DialogTitle,
   DialogActions,
+  MobileStepper,
 } from "@material-ui/core";
 import DeleteIcon from "@material-ui/icons/Delete";
+import KeyboardArrowRight from "@material-ui/icons/KeyboardArrowRight";
+
 import Container from "react-bootstrap/Container";
 import { CartContext } from "../context/CartContext";
 import { UserContext } from "../context/UserContext";
 import Alert from "@material-ui/lab/Alert";
+import Checkout from "./shared/Checkout";
 
 const useStyles = makeStyles((theme) => ({
   card: {
@@ -43,6 +47,10 @@ const useStyles = makeStyles((theme) => ({
     paddingTop: "0",
     paddingBottom: "0",
   },
+  stepper: {
+    justifyContent: "center",
+    background: "inherit",
+  },
 }));
 
 function Cart(props) {
@@ -53,6 +61,8 @@ function Cart(props) {
   const [purchaseSuccess, setPurchaseSuccess] = useState(false);
   const [purchaseError, setPurchaseError] = useState(false);
   const [lessBalance, setLessBalance] = useState(false);
+  const [activeStep, setActiveStep] = useState(0);
+
   const courseService = new CourseService();
 
   const userContext = useRef(useContext(UserContext));
@@ -101,9 +111,7 @@ function Cart(props) {
     setCartItems((prev) => prev.filter((c) => c.id !== courseId));
   };
 
-  const purchaseCourse = async (event) => {
-    event.preventDefault();
-
+  const purchaseCourse = async (billData) => {
     const balance = userContext.current.userState.user["creditBalance"];
     if (balance < totalCredits) setLessBalance(true);
     else {
@@ -113,6 +121,7 @@ function Cart(props) {
 
       const data = {
         items: items,
+        billing: billData,
       };
 
       const result = await courseService.purchaseCourse(data);
@@ -133,111 +142,131 @@ function Cart(props) {
   return (
     <div>
       <br />
-      <Typography variant="h5" component="h5">
-        Course Cart
-      </Typography>
-      <br />
-      <Typography variant="subtitle1" component="h6">
-        {cartItems.length < 2
-          ? cartItems.length + " Course "
-          : cartItems.length + " Courses "}{" "}
-        in Cart
-      </Typography>
-      {cartItems.length === 0 && (
-        <div>
-          <Container>
-            <Paper align="center" className={classes.card}>
-              <div>
-                <CardMedia
-                  image="https://www.netclipart.com/pp/m/3-39507_cart-clipart-ferris-wheel-shopping-cart.png"
-                  title="Empty Cart"
-                  className={classes.cardMedia}
-                />
-              </div>
-              <CardContent className={classes.cardContent}>
-                <Typography variant="caption" component="h4">
-                  Your cart is empty. Keep looking for a course.
-                </Typography>
-              </CardContent>
-            </Paper>
-          </Container>
-        </div>
-      )}
-      {cartItems.length > 0 && (
+      {activeStep === 0 && (
         <>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell />
-                  <TableCell>Details</TableCell>
-                  <TableCell align="center">Credits</TableCell>
-                  <TableCell />
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {cartItems.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell>
-                      <Avatar src={item.thumbnail} size="large" />
-                    </TableCell>
-                    <TableCell>
-                      <ListItemText
-                        primary={item.name}
-                        secondary={item.author ? item.author : null}
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      {Number(item.credit).toFixed(1)}
-                    </TableCell>
-                    <TableCell align="center">
-                      <IconButton
-                        edge="end"
-                        aria-label="delete"
-                        onClick={() => removeFromCart(item.id)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                <TableRow>
-                  <TableCell colSpan={2} align="right">
-                    Total Credits
-                  </TableCell>
-                  <TableCell align="center">
-                    {Number(totalCredits).toFixed(1)}
-                  </TableCell>
-                  <TableCell />
-                </TableRow>
-                <TableRow>
-                  <TableCell colSpan={3}>
-                    <Typography
-                      color="secondary"
-                      variant="caption"
-                      component="span"
-                    >
-                      You have{" "}
-                      {userContext.current.userState.user.creditBalance} credits
-                      in your account.
+          <Typography variant="h5" component="h5">
+            Course Cart
+          </Typography>
+          <br />
+          <Typography variant="subtitle1" component="h6">
+            {cartItems.length < 2
+              ? cartItems.length + " Course "
+              : cartItems.length + " Courses "}{" "}
+            in Cart
+          </Typography>
+          {cartItems.length === 0 && (
+            <div>
+              <Container>
+                <Paper align="center" className={classes.card}>
+                  <div>
+                    <CardMedia
+                      image="https://www.netclipart.com/pp/m/3-39507_cart-clipart-ferris-wheel-shopping-cart.png"
+                      title="Empty Cart"
+                      className={classes.cardMedia}
+                    />
+                  </div>
+                  <CardContent className={classes.cardContent}>
+                    <Typography variant="caption" component="h4">
+                      Your cart is empty. Keep looking for a course.
                     </Typography>
-                  </TableCell>
-                  <TableCell align="center">
-                    <Button
-                      onClick={() => setConfirmPurchase(true)}
-                      variant="contained"
-                      color="primary"
-                      size="medium"
-                    >
-                      Buy
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
+                  </CardContent>
+                </Paper>
+              </Container>
+            </div>
+          )}
+          {cartItems.length > 0 && (
+            <>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell />
+                      <TableCell>Details</TableCell>
+                      <TableCell align="center">Credits</TableCell>
+                      <TableCell />
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {cartItems.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell>
+                          <Avatar src={item.thumbnail} size="large" />
+                        </TableCell>
+                        <TableCell>
+                          <ListItemText
+                            primary={item.name}
+                            secondary={item.author ? item.author : null}
+                          />
+                        </TableCell>
+                        <TableCell align="center">
+                          {Number(item.credit).toFixed(1)}
+                        </TableCell>
+                        <TableCell align="center">
+                          <IconButton
+                            edge="end"
+                            aria-label="delete"
+                            onClick={() => removeFromCart(item.id)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    <TableRow>
+                      <TableCell colSpan={2} align="right">
+                        Total Credits
+                      </TableCell>
+                      <TableCell align="center">
+                        {Number(totalCredits).toFixed(1)}
+                      </TableCell>
+                      <TableCell />
+                    </TableRow>
+                    <TableRow>
+                      <TableCell colSpan={3}>
+                        <Typography
+                          color="secondary"
+                          variant="caption"
+                          component="span"
+                        >
+                          You have{" "}
+                          {userContext.current.userState.user.creditBalance}{" "}
+                          credits in your account.
+                        </Typography>
+                      </TableCell>
+                      <TableCell align="center">
+                        <Button
+                          //onClick={() => setConfirmPurchase(true)}
+                          onClick={() => setActiveStep(1)}
+                          variant="contained"
+                          color="primary"
+                          size="medium"
+                        >
+                          Checkout <KeyboardArrowRight />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </>
+          )}
         </>
       )}
+      {activeStep === 1 && (
+        <Checkout
+          cartItems={cartItems}
+          totalCredits={totalCredits}
+          purchase={purchaseCourse}
+        />
+      )}
+      <br />
+      <MobileStepper
+        variant="dots"
+        steps={2}
+        position="static"
+        activeStep={activeStep}
+        className={classes.stepper}
+      />
       <Dialog open={confirmPurchase}>
         <DialogTitle>Do you wish to proceed with the transaction</DialogTitle>
         <DialogActions>

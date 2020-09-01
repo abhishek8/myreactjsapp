@@ -4,6 +4,7 @@ import CourseService from "../services/courseService";
 
 import Typography from "@material-ui/core/Typography";
 import { Grid } from "@material-ui/core";
+import BackButton from "./shared/BackButton";
 
 function UserSubscription(props) {
   const [courses, setCourses] = useState([]);
@@ -21,7 +22,7 @@ function UserSubscription(props) {
 
   return (
     <div>
-      <br />
+      <BackButton />
       <Typography variant="h6" component="h4">
         {courses && courses.length > 0
           ? "My Courses"

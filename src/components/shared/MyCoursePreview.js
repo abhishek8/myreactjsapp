@@ -10,6 +10,7 @@ import Rating from "@material-ui/lab/Rating";
 import Chip from "@material-ui/core/Chip";
 import ScoreIcon from "@material-ui/icons/Score";
 import EditIcon from "@material-ui/icons/Edit";
+import VisibilityOffIcon from "@material-ui/icons/VisibilityOff";
 import DeleteForeverIcon from "@material-ui/icons/DeleteForever";
 import {
   makeStyles,
@@ -20,6 +21,7 @@ import {
   DialogContent,
   DialogTitle,
   Avatar,
+  DialogContentText,
 } from "@material-ui/core";
 
 const useStyles = makeStyles((theme) => ({
@@ -37,12 +39,12 @@ const useStyles = makeStyles((theme) => ({
   },
   cardMedia: {
     paddingTop: "60%",
-    "&:hover": {
-      backgroundColor: "#000",
-      opacity: 0.2,
-    },
   },
   cardContent: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-evenly",
+    height: "100%",
     flexGrow: 1,
     paddingTop: theme.spacing(1),
     "&:last-child": {
@@ -63,12 +65,24 @@ function MyCoursePreview(props) {
   const avg_rating = Number(course.ratings.avg_rating.toFixed(1));
 
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDeactivate, setConfirmDeactivate] = useState(false);
+  const [confirmEditForDeactive, setConfirmEditForDeactivate] = useState(false);
 
   const classes = useStyles();
+
+  const deactivateCourse = (e) => {
+    setConfirmDeactivate(false);
+    props.handleDeactivate(course._id);
+  };
 
   const removeCourse = (e) => {
     setConfirmDelete(false);
     props.handleRemove(course._id);
+  };
+
+  const handleEdit = (e) => {
+    if (course.status === "DEACTIVATED") setConfirmEditForDeactivate(true);
+    else props.handleEdit();
   };
 
   return (
@@ -98,31 +112,59 @@ function MyCoursePreview(props) {
             />{" "}
             ({course.ratings.total_count}){" "}
           </Typography>
-          <Chip
-            label={props.course.credits.score.toFixed(1) + " credit gain"}
-            color="default"
-            size="small"
-            icon={<ScoreIcon />}
-          />
-          <Typography color="secondary" variant="h6" component="h6">
-            {credit}
-          </Typography>
-          <IconButton
-            variant="contained"
-            color="primary"
-            size="medium"
-            onClick={props.handleEdit}
-          >
-            <EditIcon />
-          </IconButton>
-          <IconButton
-            variant="contained"
-            color="secondary"
-            size="medium"
-            onClick={() => setConfirmDelete(true)}
-          >
-            <DeleteForeverIcon />
-          </IconButton>
+          <Grid container justify="space-around">
+            <Grid item>
+              <Chip
+                label={props.course.credits.score.toFixed(1) + " credit gain"}
+                color="default"
+                size="small"
+                icon={<ScoreIcon />}
+              />
+            </Grid>
+            <Grid item>
+              <Typography color="secondary" variant="h6" component="h6">
+                {credit}
+              </Typography>
+            </Grid>
+          </Grid>
+
+          <Grid container justify="center">
+            <Grid item>
+              {!(course.status === "COMPLETED") && (
+                <IconButton
+                  variant="contained"
+                  color="primary"
+                  size="medium"
+                  onClick={handleEdit}
+                >
+                  <EditIcon />
+                </IconButton>
+              )}
+            </Grid>
+            <Grid>
+              {(course.status === "CREATED" ||
+                course.status === "COMPLETED") && (
+                <IconButton
+                  variant="contained"
+                  color="secondary"
+                  size="medium"
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <DeleteForeverIcon />
+                </IconButton>
+              )}
+              {course.status === "ACTIVE" && (
+                <IconButton
+                  variant="contained"
+                  color="secondary"
+                  size="medium"
+                  onClick={() => setConfirmDeactivate(true)}
+                >
+                  <VisibilityOffIcon />
+                </IconButton>
+              )}
+            </Grid>
+          </Grid>
         </CardContent>
       </Card>
 
@@ -155,6 +197,62 @@ function MyCoursePreview(props) {
           </Button>
           <Button onClick={removeCourse} color="secondary" autoFocus>
             Yes
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        disableBackdropClick
+        disableEscapeKeyDown
+        keepMounted
+        open={confirmDeactivate}
+        onClose={() => setConfirmDeactivate(false)}
+      >
+        <DialogTitle>
+          Are you sure you want to deactivate this course?
+        </DialogTitle>
+        <DialogContent>
+          <Grid container>
+            <Grid item>
+              <Avatar src={course.thumbnail} className={classes.avatar} />
+            </Grid>
+            <Grid item>
+              <Typography variant="h6" component="h6">
+                {title}
+              </Typography>
+              <Typography variant="body1" component="p">
+                {author}
+              </Typography>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDeactivate(false)} color="default">
+            Cancel
+          </Button>
+          <Button onClick={deactivateCourse} color="secondary" autoFocus>
+            Yes
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={confirmEditForDeactive}
+        onClose={() => setConfirmEditForDeactivate(false)}
+      >
+        <DialogTitle>Are you sure you want to edit this course?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Once submitted and approved, the course will be activated again.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setConfirmEditForDeactivate(false)}
+            color="default"
+          >
+            Cancel
+          </Button>
+          <Button onClick={props.handleEdit} color="secondary" autoFocus>
+            Continue
           </Button>
         </DialogActions>
       </Dialog>

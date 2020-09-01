@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useHistory } from "react-router-dom";
 import AppUtils from "../../utilities/AppUtils";
 
 import Grid from "@material-ui/core/Grid";
@@ -37,12 +38,12 @@ const useStyles = makeStyles((theme) => ({
   },
   cardMedia: {
     paddingTop: "60%",
-    "&:hover": {
-      backgroundColor: "#000",
-      opacity: 0.2,
-    },
   },
   cardContent: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-evenly",
+    height: "100%",
     flexGrow: 1,
     paddingTop: theme.spacing(1),
     "&:last-child": {
@@ -67,6 +68,7 @@ function ReviewPreview(props) {
     approve: null,
   });
 
+  const history = useHistory();
   const classes = useStyles();
 
   const verifyCourse = (status) => {
@@ -81,7 +83,7 @@ function ReviewPreview(props) {
           className={classes.cardMedia}
           image={course.thumbnail}
           title={course.title}
-          onClick={() => props.history.push(`/video/${course._id}`)}
+          onClick={() => history.push(`/video/${course._id}`)}
         />
         <CardContent className={classes.cardContent}>
           <Typography variant="h6" component="h6">
@@ -101,31 +103,50 @@ function ReviewPreview(props) {
             />{" "}
             ({course.ratings.total_count}){" "}
           </Typography>
-          <Chip
-            label={props.course.credits.score.toFixed(1) + " credit gain"}
-            color="default"
-            size="small"
-            icon={<ScoreIcon />}
-          />
-          <Typography color="secondary" variant="h6" component="h6">
-            {credit}
-          </Typography>
-          <IconButton
-            variant="contained"
-            color="primary"
-            size="medium"
-            onClick={() => setConfirmChanges({ state: true, approve: true })}
-          >
-            <CheckIcon />
-          </IconButton>
-          <IconButton
-            variant="contained"
-            color="secondary"
-            size="medium"
-            onClick={() => setConfirmChanges({ state: true, approve: false })}
-          >
-            <CancelRoundedIcon />
-          </IconButton>
+          <Grid container justify="space-around">
+            <Grid item>
+              <Chip
+                label={props.course.credits.score.toFixed(1) + " credit gain"}
+                color="default"
+                size="small"
+                icon={<ScoreIcon />}
+              />
+            </Grid>
+            <Grid item>
+              <Typography color="secondary" variant="h6" component="h6">
+                {credit}
+              </Typography>
+            </Grid>
+          </Grid>
+          <Grid container justify="center">
+            <Grid item>
+              {!props.hideApprove && (
+                <IconButton
+                  variant="contained"
+                  color="primary"
+                  size="medium"
+                  align="bottom"
+                  onClick={() =>
+                    setConfirmChanges({ state: true, approve: true })
+                  }
+                >
+                  <CheckIcon />
+                </IconButton>
+              )}
+              {!props.hideDelete && (
+                <IconButton
+                  variant="contained"
+                  color="secondary"
+                  size="medium"
+                  onClick={() =>
+                    setConfirmChanges({ state: true, approve: false })
+                  }
+                >
+                  <CancelRoundedIcon />
+                </IconButton>
+              )}
+            </Grid>
+          </Grid>
         </CardContent>
       </Card>
 

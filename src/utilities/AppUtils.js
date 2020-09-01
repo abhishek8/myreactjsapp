@@ -1,6 +1,14 @@
 import axios from "axios";
 
 const AppUtils = {
+  getLocalItem(itemName) {
+    let sessionVal = sessionStorage.getItem(itemName);
+    if (sessionVal) return sessionVal;
+    let localVal = localStorage.getItem(itemName);
+    if (localVal) return localVal;
+    return null;
+  },
+
   getQueryParamValue(name, url) {
     if (!url) url = window.location.href;
     url = url.toLowerCase();

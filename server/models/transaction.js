@@ -11,6 +11,11 @@ const Transaction = new Schema(
         credit: { type: Number, required: true },
       },
     ],
+    billing: {
+      name: { type: String, required: true },
+      address: { type: String, required: true },
+      contact: { type: String, required: true },
+    },
     purchaseDate: { type: Date, required: true },
   },
   { timestamps: true }
